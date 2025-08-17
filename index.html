@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Quản lý kho La Phông - PHONG PHÁT</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -46,7 +46,7 @@
         </div>
 
         <h5 class="mt-3">Nhập hàng</h5>
-        <form id="productForm" class="row g-2">
+        <form id="productForm" onsubmit="warehouse.saveProduct(event)" class="row g-2">
           <div class="col-6"><input id="productName" class="form-control" placeholder="Tên sản phẩm" required></div>
           <div class="col-6"><input id="productCode" class="form-control" placeholder="Mã sản phẩm" required></div>
           <div class="col-6"><select id="productCategory" class="form-control" required></select></div>
@@ -54,7 +54,7 @@
           <div class="col-6"><input id="productSellPrice" type="number" class="form-control" placeholder="Giá bán" required></div>
           <div class="col-6"><input id="productStock" type="number" class="form-control" placeholder="Số lượng nhập" required></div>
           <div class="col-12"><textarea id="productDesc" class="form-control" placeholder="Mô tả"></textarea></div>
-          <div class="col-12"><button id="btnSaveProduct" type="submit" class="btn btn-success w-100">Lưu</button></div>
+          <div class="col-12"><button type="submit" class="btn btn-success w-100">Lưu</button></div>
         </form>
       </div>
 
@@ -68,7 +68,7 @@
       <div id="sales" class="tab-content">
         <h4>Lịch sử bán</h4>
         <table class="table table-sm table-bordered">
-          <thead><tr><th>Ngày</th><th>Tên</th><th>SL</th><th>Tổng</th><th>Xóa</th></tr></thead>
+          <thead><tr><th>Ngày</th><th>Tên</th><th>SL</th><th>Tổng</th><th>Mô tả</th><th>Xóa</th></tr></thead>
           <tbody id="salesHistory"></tbody>
         </table>
       </div>
@@ -85,7 +85,7 @@
 
     <!-- Tabs -->
     <div class="tabs">
-      <div class="tab active" onclick="openTab('overview',this)">Tổng quan</div>
+      <div class="tab" onclick="openTab('overview',this)">Tổng quan</div>
       <div class="tab" onclick="openTab('products',this)">Sản phẩm</div>
       <div class="tab" onclick="openTab('sales',this)">Bán</div>
       <div class="tab" onclick="openTab('imports',this)">Nhập</div>
@@ -99,6 +99,7 @@
       <div class="modal-body">
         <p><b id="saleProductName"></b> (Tồn: <span id="saleStock"></span>)</p>
         <p>Giá bán: <span id="salePrice"></span></p>
+        <p>Mô tả: <span id="saleDesc"></span></p>
         <input type="number" id="saleQty" class="form-control mb-2" placeholder="Số lượng">
         <p>Thành tiền: <span id="saleTotal">0</span></p>
       </div>
@@ -111,17 +112,12 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import {
-      getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot,
-      getDocs, query, where, writeBatch
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-    // ==== Firebase config của bạn ====
     const firebaseConfig = {
       apiKey: "AIzaSyB06U8J2owwj03mOU2MdcGlMnNxA0NN3Ms",
       authDomain: "la-phon-phong-phat.firebaseapp.com",
-      databaseURL: "https://la-phon-phong-phat-default-rtdb.asia-southeast1.firebasedatabase.app",
       projectId: "la-phon-phong-phat",
       storageBucket: "la-phon-phong-phat.firebasestorage.app",
       messagingSenderId: "643189174098",
@@ -129,348 +125,143 @@
       measurementId: "G-BCK9B2Z2J6"
     };
 
-    // ==== Khởi tạo ====
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
 
-    // ==== Helper DOM ====
-    const $ = (id) => document.getElementById(id);
-
-    // ==== Phân loại & màu danh mục ====
-    const categories = ["La phông ánh kim","La phông nhựa","La phông vĩnh tường","Khung xương trần thả","Khung xương thạch cao","Tấm thạch cao","Nano","Phụ kiện khác"];
-    const categoryColors = {
-      "La phông ánh kim":"#cce5ff",
-      "La phông nhựa":"#cce5ff",
-      "La phông vĩnh tường":"#cce5ff",
-      "Khung xương trần thả":"#ffeeba",
-      "Khung xương thạch cao":"#ffeeba",
-      "Tấm thạch cao":"#d4edda",
-      "Nano":"#d4edda",
-      "Phụ kiện khác":"#e2e3e5"
-    };
-    const catSelect = $("productCategory");
-    categories.forEach(c => { const o=document.createElement("option"); o.value=c; o.textContent=c; catSelect.appendChild(o); });
-
-    // ==== Tabs ====
-    function openTab(id, el) {
-      document.querySelectorAll(".tab-content").forEach(t => t.style.display = "none");
-      $(id).style.display = "block";
-      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-      if (el) el.classList.add("active");
-    }
-    // Mặc định mở Tổng quan
-    openTab("overview", document.querySelector('.tab'));
-
-    function showAlert(msg, type="success") {
-      $("alertContainer").innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
-      setTimeout(() => $("alertContainer").innerHTML = "", 3000);
-    }
-
-    // ==== Auth (gán ra window để onclick gọi được) ====
-    async function login() {
-      const email = $("loginEmail").value.trim();
-      const pass  = $("loginPass").value;
-      try { await signInWithEmailAndPassword(auth, email, pass); }
-      catch (e) { showAlert(e.message, "danger"); }
-    }
-    async function register() {
-      const email = $("loginEmail").value.trim();
-      const pass  = $("loginPass").value;
-      try { await createUserWithEmailAndPassword(auth, email, pass); }
-      catch (e) { showAlert(e.message, "danger"); }
-    }
-    function logout() { signOut(auth); }
-
-    window.openTab = openTab;
-    window.login = login;
-    window.register = register;
-    window.logout = logout;
-
     let role = "seller";
     let currentUser = null;
+    let editingId = null;
+    let saleProduct = null;
 
-    // ==== Quản lý kho ====
-    class WarehouseManager {
-      constructor() {
-        this.productsCol = collection(db, "products");
-        this.salesCol    = collection(db, "sales");
-        this.importsCol  = collection(db, "imports");
-        this.products = [];
-        this.lastSellerSale = null;
-        this.saleProduct = null;
-      }
+    const categories = ["La phông ánh kim","La phông nhựa","La phông vĩnh tường","Khung xương trần thả","Khung xương thạch cao","Tấm thạch cao","Nano","Phụ kiện khác"];
+    const categoryColors = { "La phông ánh kim":"#cce5ff","La phông nhựa":"#cce5ff","La phông vĩnh tường":"#cce5ff","Khung xương trần thả":"#ffeeba","Khung xương thạch cao":"#ffeeba","Tấm thạch cao":"#d4edda","Nano":"#d4edda","Phụ kiện khác":"#e2e3e5" };
+    const catSelect = document.getElementById("productCategory");
+    categories.forEach(c => { let o=document.createElement("option");o.value=c;o.textContent=c;catSelect.appendChild(o); });
 
-      listen() {
-        onSnapshot(this.productsCol, snap => {
-          const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-          this.products = list;
-          this.renderProducts(list);
-          this.updateStats(list);
-        });
+    function openTab(id, el){
+      document.querySelectorAll(".tab-content").forEach(t=>t.style.display="none");
+      document.getElementById(id).style.display="block";
+      document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+      if(el) el.classList.add("active");
+    }
+    openTab("overview", document.querySelector(".tab"));
 
-        onSnapshot(this.salesCol, snap => {
-          const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-          this.renderSales(list);
-        });
-
-        onSnapshot(this.importsCol, snap => {
-          const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-          this.renderImports(list);
-        });
-
-        // Bắt sự kiện submit form nhập
-        $("productForm").addEventListener("submit", (e) => this.saveProduct(e));
-        // Bắt sự kiện tính thành tiền khi nhập số lượng bán
-        $("saleQty").addEventListener("input", () => {
-          const qty = +$("saleQty").value || 0;
-          $("saleTotal").textContent = (this.saleProduct ? qty * (this.saleProduct.sellPrice || 0) : 0) + "₫";
-        });
-      }
-
-      async saveProduct(e) {
-        e.preventDefault();
-        const data = {
-          name: $("productName").value.trim(),
-          code: $("productCode").value.trim(),
-          category: $("productCategory").value,
-          importPrice: +$("productImportPrice").value || 0,
-          sellPrice: +$("productSellPrice").value || 0,
-          stock: +$("productStock").value || 0,
-          sold: 0,
-          desc: $("productDesc").value || ""
-        };
-
-        try {
-          if (this.editingId) {
-            await updateDoc(doc(db, "products", this.editingId), data);
-            this.editingId = null;
-            showAlert("Đã cập nhật sản phẩm");
-          } else {
-            // Tạo sản phẩm trước để lấy id
-            const prodRef = await addDoc(this.productsCol, data);
-            // Ghi lịch sử nhập gắn productId
-            await addDoc(this.importsCol, {
-              productId: prodRef.id,
-              name: data.name,
-              code: data.code,
-              price: data.importPrice,
-              quantity: data.stock,
-              total: data.importPrice * data.stock,
-              createdAt: Date.now(),
-              user: currentUser.email
-            });
-            showAlert("Đã thêm sản phẩm & ghi lịch sử nhập");
-          }
-          e.target.reset();
-        } catch (err) {
-          showAlert(err.message, "danger");
-        }
-      }
-
-      editProductById(id) {
-        const p = this.products.find(x => x.id === id);
-        if (!p) return;
-        this.editingId = p.id;
-        $("productName").value = p.name;
-        $("productCode").value = p.code;
-        $("productCategory").value = p.category;
-        $("productImportPrice").value = p.importPrice;
-        $("productSellPrice").value = p.sellPrice;
-        $("productStock").value = p.stock;
-        $("productDesc").value = p.desc || "";
-        openTab("overview", document.querySelector('.tab')); // chuyển về form
-      }
-
-      async deleteProduct(id) {
-        if (role !== "stock") { showAlert("Chỉ tài khoản stock được xóa", "danger"); return; }
-        try {
-          const batch = writeBatch(db);
-
-          // Xóa lịch sử bán của sản phẩm
-          const qSales = query(this.salesCol, where("productId", "==", id));
-          const sSnap = await getDocs(qSales);
-          sSnap.forEach(docSnap => batch.delete(docSnap.ref));
-
-          // Xóa lịch sử nhập của sản phẩm
-          const qImports = query(this.importsCol, where("productId", "==", id));
-          const iSnap = await getDocs(qImports);
-          iSnap.forEach(docSnap => batch.delete(docSnap.ref));
-
-          // Xóa sản phẩm
-          batch.delete(doc(db, "products", id));
-
-          await batch.commit();
-          showAlert("Đã xóa sản phẩm và toàn bộ lịch sử liên quan");
-        } catch (err) {
-          showAlert(err.message, "danger");
-        }
-      }
-
-      // Bán
-      sellProductById(id) {
-        const p = this.products.find(x => x.id === id);
-        if (!p) return;
-        this.saleProduct = p;
-        $("saleProductName").textContent = p.name;
-        $("saleStock").textContent = p.stock;
-        $("salePrice").textContent = (p.sellPrice || 0) + "₫";
-        $("saleQty").value = "";
-        $("saleTotal").textContent = "0";
-        new bootstrap.Modal($("saleModal")).show();
-      }
-
-      async confirmSale() {
-        const p = this.saleProduct;
-        if (!p) return;
-        const qty = +$("saleQty").value || 0;
-        if (qty <= 0 || qty > p.stock) { showAlert("Số lượng bán không hợp lệ", "danger"); return; }
-        const total = qty * (p.sellPrice || 0);
-        try {
-          await updateDoc(doc(db, "products", p.id), {
-            stock: (p.stock || 0) - qty,
-            sold: (p.sold || 0) + qty
-          });
-          await addDoc(this.salesCol, {
-            productId: p.id,
-            name: p.name,
-            code: p.code,
-            quantity: qty,
-            price: p.sellPrice || 0,
-            total,
-            createdAt: Date.now(),
-            user: currentUser.email
-          });
-          bootstrap.Modal.getInstance($("saleModal")).hide();
-          showAlert("Đã bán");
-        } catch (err) {
-          showAlert(err.message, "danger");
-        }
-      }
-
-      async deleteHistory(col, id, item) {
-        try {
-          if (col === "imports") {
-            // Chỉ stock được xóa lịch sử nhập
-            if (role !== "stock") { showAlert("Seller không được xóa lịch sử nhập", "danger"); return; }
-            await deleteDoc(doc(db, "imports", id));
-            showAlert("Đã xóa lịch sử nhập");
-            return;
-          }
-          if (col === "sales") {
-            if (role === "stock") {
-              await deleteDoc(doc(db, "sales", id));
-              showAlert("Đã xóa lịch sử bán");
-              return;
-            } else {
-              // Seller: chỉ xóa được lần bán gần nhất của chính mình
-              if (item.user === currentUser.email && id === this.lastSellerSale) {
-                await deleteDoc(doc(db, "sales", id));
-                showAlert("Đã xóa lịch sử bán gần nhất");
-              } else {
-                showAlert("Seller chỉ được xóa lần bán gần nhất của mình", "danger");
-              }
-            }
-          }
-        } catch (err) {
-          showAlert(err.message, "danger");
-        }
-      }
-
-      renderProducts(list) {
-        let html = "";
-        list.forEach(p => {
-          html += `
-            <div class="product-card" style="background:${categoryColors[p.category]||'#fff'}">
-              <div class="d-flex justify-content-between align-items-start">
-                <h5 class="mb-1">${p.name}</h5>
-                <span class="badge-cat" style="background:${categoryColors[p.category]||'#ccc'}">${p.category||''}</span>
-              </div>
-              <div class="small text-muted mb-1">Mã: ${p.code||''}</div>
-              <div>Tồn: <b>${p.stock||0}</b> &nbsp;|&nbsp; Đã bán: <b>${p.sold||0}</b></div>
-              <div>Giá nhập: <b>${p.importPrice||0}₫</b> &nbsp;|&nbsp; Giá bán: <b>${p.sellPrice||0}₫</b></div>
-              <div class="mt-2">
-                <button class="btn btn-sm btn-success me-1" onclick="warehouse.sellProductById('${p.id}')">Bán</button>
-                ${role==="stock" ? `
-                  <button class="btn btn-sm btn-primary me-1" onclick="warehouse.editProductById('${p.id}')">Cập nhật</button>
-                  <button class="btn btn-sm btn-danger" onclick="warehouse.deleteProduct('${p.id}')">Xóa</button>
-                ` : ``}
-              </div>
-            </div>
-          `;
-        });
-        $("productList").innerHTML = html;
-      }
-
-      renderSales(list) {
-        list.sort((a,b) => b.createdAt - a.createdAt);
-        // Lưu id lần bán gần nhất của chính user (nếu có)
-        const ownLatest = list.find(i => i.user === (currentUser?.email||""));
-        this.lastSellerSale = ownLatest ? ownLatest.id : null;
-
-        // Tổng tiền bán
-        const sum = list.reduce((s,i) => s + (i.total||0), 0);
-        $("totalSales").textContent = sum + "₫";
-
-        let html = "";
-        list.forEach(i => {
-          html += `
-            <tr>
-              <td>${new Date(i.createdAt||Date.now()).toLocaleString()}</td>
-              <td>${i.name||""}</td>
-              <td>${i.quantity||0}</td>
-              <td>${i.total||0}₫</td>
-              <td><button class="btn btn-sm btn-danger" onclick='warehouse.deleteHistory("sales","${i.id}",${JSON.stringify({user:i.user||"", id:i.id})})'>Xóa</button></td>
-            </tr>
-          `;
-        });
-        $("salesHistory").innerHTML = html;
-      }
-
-      renderImports(list) {
-        list.sort((a,b) => b.createdAt - a.createdAt);
-        let html = "";
-        list.forEach(i => {
-          html += `
-            <tr>
-              <td>${new Date(i.createdAt||Date.now()).toLocaleString()}</td>
-              <td>${i.name||""}</td>
-              <td>${i.quantity||0}</td>
-              <td>${i.total||0}₫</td>
-              <td><button class="btn btn-sm btn-danger" onclick='warehouse.deleteHistory("imports","${i.id}",{})'>Xóa</button></td>
-            </tr>
-          `;
-        });
-        $("importHistory").innerHTML = html;
-      }
-
-      updateStats(products) {
-        $("totalProducts").textContent = products.length;
-        const totalValue = products.reduce((acc,p)=> acc + (p.importPrice||0) * (p.stock||0), 0);
-        $("totalValue").textContent = totalValue + "₫";
-        $("lowStock").textContent = products.filter(p => (p.stock||0) < 5).length;
-      }
+    function showAlert(msg,type="success"){
+      document.getElementById("alertContainer").innerHTML=`<div class="alert alert-${type}">${msg}</div>`;
+      setTimeout(()=>document.getElementById("alertContainer").innerHTML="",3000);
     }
 
-    // Tạo instance gán ra window để dùng trong HTML onclick
-    const warehouse = new WarehouseManager();
-    window.warehouse = warehouse;
+    async function login(){ try{ await signInWithEmailAndPassword(auth, loginEmail.value, loginPass.value); }catch(e){showAlert(e.message,"danger");}}
+    async function register(){ try{ await createUserWithEmailAndPassword(auth, loginEmail.value, loginPass.value); }catch(e){showAlert(e.message,"danger");}}
+    function logout(){signOut(auth);}
 
-    // Theo dõi auth
-   onAuthStateChanged(auth, u => {
-  if (u) {
-    currentUser = u;
-    role = u.email.includes("stock") ? "stock" : "seller";
-    document.getElementById("loginScreen").style.display = "none";
-    document.getElementById("appContainer").style.display = "block";
-    warehouse.listen();
-  } else {
-    currentUser = null;
-    document.getElementById("appContainer").style.display = "none";
-    document.getElementById("loginScreen").style.display = "flex";
-  }
-});
+    onAuthStateChanged(auth, (user) => {
+      const loginEl = document.getElementById("loginScreen");
+      const appEl = document.getElementById("appContainer");
+      if(user){
+        currentUser=user;
+        role=user.email.includes("stock")?"stock":"seller";
+        loginEl.style.display="none";
+        appEl.style.display="block";
+        warehouse.listen();
+      } else {
+        currentUser=null;
+        appEl.style.display="none";
+        loginEl.style.display="flex";
+      }
+    });
 
+    class WarehouseManager{
+      constructor(){ this.productsCol=collection(db,"products"); this.salesCol=collection(db,"sales"); this.importsCol=collection(db,"imports"); }
+      listen(){
+        onSnapshot(this.productsCol,snap=>{ this.renderProducts(snap.docs.map(d=>({id:d.id,...d.data()}))); this.updateStats(snap.docs.map(d=>d.data())); });
+        onSnapshot(this.salesCol,snap=>{ this.renderSales(snap.docs.map(d=>({id:d.id,...d.data()}))); });
+        onSnapshot(this.importsCol,snap=>{ this.renderImports(snap.docs.map(d=>({id:d.id,...d.data()}))); });
+      }
+      async saveProduct(e){ 
+        e.preventDefault(); 
+        let data={ name:productName.value, code:productCode.value, category:productCategory.value, importPrice:+productImportPrice.value, sellPrice:+productSellPrice.value, stock:+productStock.value, sold:0, desc:productDesc.value }; 
+        if(editingId){ 
+          await updateDoc(doc(db,"products",editingId),data); editingId=null; 
+        } else { 
+          await addDoc(this.productsCol,data); 
+          await addDoc(this.importsCol,{...data,quantity:data.stock,total:data.importPrice*data.stock,createdAt:Date.now(),user:currentUser.email}); 
+        } 
+        e.target.reset(); showAlert("Lưu thành công"); 
+      }
+      async deleteProduct(id){ if(role!=="stock"){showAlert("Chỉ stock được xóa","danger");return;} await deleteDoc(doc(db,"products",id)); showAlert("Đã xóa sản phẩm"); }
+      editProduct(p){ editingId=p.id; productName.value=p.name;productCode.value=p.code;productCategory.value=p.category;productImportPrice.value=p.importPrice;productSellPrice.value=p.sellPrice;productStock.value=p.stock;productDesc.value=p.desc; openTab("overview"); }
+      sellProduct(p){ 
+        saleProduct=p; 
+        saleProductName.textContent=p.name; 
+        saleStock.textContent=p.stock; 
+        salePrice.textContent=p.sellPrice+"₫"; 
+        saleDesc.textContent=p.desc||"Không có"; 
+        saleQty.value=""; 
+        saleTotal.textContent="0"; 
+        new bootstrap.Modal(document.getElementById("saleModal")).show(); 
+      }
+      async confirmSale(){ 
+        let qty=+saleQty.value; 
+        if(qty<=0||qty>saleProduct.stock){showAlert("SL không hợp lệ","danger");return;} 
+        let total=qty*saleProduct.sellPrice; 
+        await updateDoc(doc(db,"products",saleProduct.id),{stock:saleProduct.stock-qty,sold:(saleProduct.sold||0)+qty}); 
+        await addDoc(this.salesCol,{productId:saleProduct.id,name:saleProduct.name,code:saleProduct.code,desc:saleProduct.desc,quantity:qty,price:saleProduct.sellPrice,total,createdAt:Date.now(),user:currentUser.email}); 
+        bootstrap.Modal.getInstance(document.getElementById("saleModal")).hide(); 
+        showAlert("Đã bán"); 
+      }
+      async deleteHistory(col,id,item){ 
+        if(role==="stock"){await deleteDoc(doc(db,col,id));} 
+        else { let last=this.lastSellerSale; if(item.user===currentUser.email&&item.id===last){await deleteDoc(doc(db,col,id));} else {showAlert("Seller chỉ được xóa lần bán gần nhất","danger");}} 
+      }
+      renderProducts(list){ 
+        let html=""; 
+        list.forEach(p=>{ 
+          html+=`<div class="product-card" style="background:${categoryColors[p.category]||'#fff'}">
+            <h5>${p.name}</h5><span class="badge-cat">${p.category}</span>
+            <p>Mã:${p.code} | Tồn:${p.stock} | Bán:${p.sold||0}</p>
+            <p>Giá nhập:${p.importPrice}₫ | Giá bán:${p.sellPrice}₫</p>
+            <p>${p.desc||""}</p>
+            <button class="btn btn-sm btn-success me-1" onclick='warehouse.sellProduct(${JSON.stringify(p)})'>Bán</button>
+            ${role==="stock"?`<button class="btn btn-sm btn-primary me-1" onclick='warehouse.editProduct(${JSON.stringify(p)})'>Cập nhật</button><button class="btn btn-sm btn-danger" onclick='warehouse.deleteProduct("${p.id}")'>Xóa</button>`:""}
+          </div>`; 
+        }); 
+        document.getElementById("productList").innerHTML=html; 
+      }
+      renderSales(list){ 
+        list.sort((a,b)=>b.createdAt-a.createdAt); 
+        if(list.length>0)this.lastSellerSale=list.find(i=>i.user===currentUser.email)?.id; 
+        let html=""; 
+        list.forEach(i=>{ 
+          html+=`<tr>
+            <td>${new Date(i.createdAt).toLocaleString()}</td>
+            <td>${i.name}</td>
+            <td>${i.quantity}</td>
+            <td>${i.total}₫</td>
+            <td>${i.desc||""}</td>
+            <td><button class="btn btn-sm btn-danger" onclick='warehouse.deleteHistory("sales","${i.id}",${JSON.stringify(i)})'>Xóa</button></td>
+          </tr>`; 
+        }); 
+        document.getElementById("salesHistory").innerHTML=html; 
+      }
+      renderImports(list){ 
+        list.sort((a,b)=>b.createdAt-a.createdAt); 
+        let html=""; 
+        list.forEach(i=>{ 
+          html+=`<tr><td>${new Date(i.createdAt).toLocaleString()}</td><td>${i.name}</td><td>${i.stock}</td><td>${i.total}₫</td><td><button class="btn btn-sm btn-danger" onclick='warehouse.deleteHistory("imports","${i.id}",${JSON.stringify(i)})'>Xóa</button></td></tr>`; 
+        }); 
+        document.getElementById("importHistory").innerHTML=html; 
+      }
+      updateStats(list){ 
+        document.getElementById("totalProducts").textContent=list.length; 
+        document.getElementById("totalValue").textContent=list.reduce((a,b)=>a+b.importPrice*b.stock,0)+"₫"; 
+        document.getElementById("lowStock").textContent=list.filter(p=>p.stock<5).length; 
+      }
+    }
+    const warehouse=new WarehouseManager();
+
+    saleQty.addEventListener("input",()=>{ saleTotal.textContent=(+saleQty.value||0)*saleProduct.sellPrice+"₫"; });
   </script>
 </body>
 </html>
