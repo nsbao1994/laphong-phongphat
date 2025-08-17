@@ -195,29 +195,42 @@
       });
       document.getElementById('productForm').addEventListener('submit',e=>this.saveProduct(e));
     }
-    async saveProduct(e){
-      e.preventDefault();
-      if(role==="seller"){this.showAlert('❌ Bạn không có quyền nhập kho','error');return;}
-      const name=document.getElementById('productName').value.trim();
-      const code=document.getElementById('productCode').value.trim();
-      const category=document.getElementById('productCategory').value.trim();
-      const importPrice=Number(document.getElementById('productImportPrice').value)||0;
-      const sellPrice=Number(document.getElementById('productSellPrice').value)||0;
-      const addStock=Number(document.getElementById('productStock').value)||0;
-      const desc=document.getElementById('productDesc').value.trim();
-      const date=new Date().toISOString().split('T')[0];
-      if(this.editingId){
-        const p=this.products[this.editingId];const newStock=(p.stock||0)+addStock;
-        await updateDoc(doc(db,'products',this.editingId),{name,code,category,importPrice,sellPrice,stock:newStock,description:desc,updatedAt:new Date().toISOString()});
-        if(addStock>0) await addDoc(collection(db,'imports'),{name,code,qty:addStock,price:importPrice,total:importPrice*addStock,date,note:"Cập nhật",createdAt:new Date().toISOString()});
-        this.showAlert('✅ Đã cập nhật','success');this.editingId=null;
-      }else{
-        await addDoc(collection(db,'products'),{name,code,category,importPrice,sellPrice,stock:addStock,sold:0,description:desc,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()});
-        if(addStock>0) await addDoc(collection(db,'imports'),{name,code,qty:addStock,price:importPrice,total:importPrice*addStock,date,note:"Nhập mới",createdAt:new Date().toISOString()});
-        this.showAlert('✅ Đã thêm sản phẩm','success');
-      }
-      document.getElementById('productForm').reset();
-    }
+   async saveProduct(e){
+  e.preventDefault();
+  if(role==="seller"){
+    this.showAlert('❌ Bạn không có quyền nhập kho','error');
+    return;
+  }
+  const name=document.getElementById('productName').value.trim();
+  const code=document.getElementById('productCode').value.trim();
+  const category=document.getElementById('productCategory').value.trim();
+  const importPrice=Number(document.getElementById('productImportPrice').value)||0;
+  const sellPrice=Number(document.getElementById('productSellPrice').value)||0;
+  const addStock=Number(document.getElementById('productStock').value)||0;
+  const desc=document.getElementById('productDesc').value.trim();
+  const date=new Date().toISOString().split('T')[0];
+
+  if(this.editingId){
+    const p=this.products[this.editingId];
+    const newStock=addStock; // ✅ dùng giá trị nhập trong form (có thể là sửa trực tiếp tồn kho)
+    await updateDoc(doc(db,'products',this.editingId),{
+      name,code,category,importPrice,sellPrice,stock:newStock,
+      description:desc,updatedAt:new Date().toISOString()
+    });
+    this.showAlert('✅ Đã cập nhật','success');
+    this.editingId=null;
+  } else {
+    await addDoc(collection(db,'products'),{
+      name,code,category,importPrice,sellPrice,stock:addStock,sold:0,
+      description:desc,createdAt:new Date().toISOString(),
+      updatedAt:new Date().toISOString()
+    });
+    this.showAlert('✅ Đã thêm sản phẩm','success');
+  }
+  document.getElementById('productForm').reset();
+}
+
+
     async deleteHistory(type,code,createdAt){
       if(!confirm("Bạn có chắc muốn xóa lịch sử này?")) return;
       const col=type==="sales"?"sales":"imports";
@@ -285,18 +298,28 @@
       document.getElementById('totalValue').textContent=totalVal.toLocaleString('vi-VN')+'₫';
       document.getElementById('lowStock').textContent=low;
     }
-    editProduct(id){
-      if(role==="seller"){this.showAlert('❌ Bạn không có quyền sửa','error');return;}
-      const p=this.products[id];if(!p)return;this.editingId=id;
-      document.getElementById('productName').value=p.name;
-      document.getElementById('productCode').value=p.code;
-      document.getElementById('productCategory').value=p.category;
-      document.getElementById('productImportPrice').value=p.importPrice??0;
-      document.getElementById('productSellPrice').value=p.sellPrice??0;
-      document.getElementById('productStock').value=0;
-      document.getElementById('productDesc').value=p.description||'';
-      openTab('overview');
-    }
+   editProduct(id){
+  if(role==="seller"){
+    this.showAlert('❌ Bạn không có quyền sửa','error');
+    return;
+  }
+  const p = this.products[id];
+  if(!p) return;
+  this.editingId = id;
+
+  document.getElementById('productName').value = p.name;
+  document.getElementById('productCode').value = p.code;
+  document.getElementById('productCategory').value = p.category;
+  document.getElementById('productImportPrice').value = p.importPrice ?? 0;
+  document.getElementById('productSellPrice').value = p.sellPrice ?? 0;
+  
+  // ✅ giữ nguyên số lượng tồn kho để dễ theo dõi
+  document.getElementById('productStock').value = p.stock ?? 0; 
+  
+  document.getElementById('productDesc').value = p.description || '';
+  openTab('overview');
+}
+
     showAlert(msg,type){
       const c=document.getElementById('alertContainer');const div=document.createElement('div');
       div.className='alert '+(type==='success'?'alert-success':'alert-error');div.textContent=msg;
