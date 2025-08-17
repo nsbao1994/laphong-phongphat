@@ -85,10 +85,10 @@
 
     <!-- Tabs -->
     <div class="tabs">
-      <div class="tab" onclick="openTab('overview')">Tổng quan</div>
-      <div class="tab" onclick="openTab('products')">Sản phẩm</div>
-      <div class="tab" onclick="openTab('sales')">Bán</div>
-      <div class="tab" onclick="openTab('imports')">Nhập</div>
+     <div class="tab" onclick="openTab('overview',this)">Tổng quan</div>
+<div class="tab" onclick="openTab('products',this)">Sản phẩm</div>
+<div class="tab" onclick="openTab('sales',this)">Bán</div>
+<div class="tab" onclick="openTab('imports',this)">Nhập</div>
     </div>
   </div>
 
@@ -139,7 +139,12 @@
     const catSelect = document.getElementById("productCategory");
     categories.forEach(c => { let o=document.createElement("option");o.value=c;o.textContent=c;catSelect.appendChild(o); });
 
-    function openTab(id){ document.querySelectorAll(".tab-content").forEach(t=>t.style.display="none"); document.getElementById(id).style.display="block"; document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active")); event.target.classList.add("active"); }
+   function openTab(id, el){
+  document.querySelectorAll(".tab-content").forEach(t=>t.style.display="none");
+  document.getElementById(id).style.display="block";
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  if(el) el.classList.add("active");
+}
     openTab("overview");
 
     function showAlert(msg,type="success"){document.getElementById("alertContainer").innerHTML=`<div class="alert alert-${type}">${msg}</div>`; setTimeout(()=>document.getElementById("alertContainer").innerHTML="",3000);}
