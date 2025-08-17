@@ -147,8 +147,8 @@
       <div>
         <h3 style="margin-bottom:12px">📦 Nhập / Cập nhật hàng</h3>
         <form id="productForm">
-          <label>Tên sản phẩm</label><input id="productName" required>
-          <label>Mã sản phẩm</label><input id="productCode" required>
+          <label>Tên sản phẩm</label><input id="productName" required onfocus="this.select()">
+          <label>Mã sản phẩm</label><input id="productCode" required onfocus="this.select()">
           <label>Danh mục</label>
           <select id="productCategory" required>
             <option value="">Chọn danh mục</option>
@@ -163,17 +163,17 @@
           <div class="form-row">
             <div>
               <label>Giá nhập (VNĐ)</label>
-              <input id="productPrice" type="number" min="0" required>
+              <input id="productPrice" type="number" min="0" required onfocus="this.select()">
             </div>
             <div>
               <label>Giá bán (VNĐ)</label>
-              <input id="productSalePrice" type="number" min="0" required>
+              <input id="productSalePrice" type="number" min="0" required onfocus="this.select()">
             </div>
           </div>
           <div class="form-row">
             <div>
               <label>Số lượng nhập mới</label>
-              <input id="productNewStock" type="number" min="0" value="0">
+              <input id="productNewStock" type="number" min="0" value="0" onfocus="this.select()">
             </div>
             <div>
               <label>Ngày nhập hàng</label>
@@ -181,7 +181,7 @@
             </div>
           </div>
           <label>Ngày nhập hàng</label><input id="productImportDate" type="date">
-          <label>Mô tả</label><textarea id="productDescription" rows="2"></textarea>
+          <label>Mô tả</label><textarea id="productDescription" rows="2" onfocus="this.select()"></textarea>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn btn-success" id="submitBtn" type="submit">📦 Nhập hàng</button>
             <button class="btn btn-warning" id="cancelBtn" type="button" style="display:none">Hủy</button>
@@ -253,11 +253,11 @@
       <div class="form-row">
         <div>
           <label>Số lượng bán</label>
-          <input id="saleQuantity" type="number" min="1" required>
+          <input id="saleQuantity" type="number" min="1" required onfocus="this.select()">
         </div>
         <div>
           <label>Giá bán (VNĐ)</label>
-          <input id="salePrice" type="number" min="0" required>
+          <input id="salePrice" type="number" min="0" required onfocus="this.select()">
         </div>
       </div>
       <div class="form-group" style="background:#e3f2fd">
@@ -266,7 +266,7 @@
       <label>Ngày bán</label>
       <input id="saleDate" type="date" required>
       <label>Ghi chú</label>
-      <textarea id="saleNote" rows="2" placeholder="Khách hàng, ghi chú..."></textarea>
+      <textarea id="saleNote" rows="2" placeholder="Khách hàng, ghi chú..." onfocus="this.select()"></textarea>
       <div class="modal-footer">
         <button class="btn btn-success" type="submit">💰 Xác nhận bán</button>
         <button class="btn" type="button" onclick="warehouse.closeSaleModal()">Hủy</button>
@@ -509,8 +509,10 @@ class WarehouseManager {
       <div><strong>Mã:</strong> ${p.code} | <strong>Tồn:</strong> ${p.stock} | <strong>Giá nhập:</strong> ${this.formatCurrency(p.price)} | <strong>Giá bán:</strong> ${this.formatCurrency(p.salePrice || p.price)}</div>
     `;
     document.getElementById('saleQuantity').max = p.stock;
-    document.getElementById('saleQuantity').value = 1;
-    document.getElementById('salePrice').value = p.salePrice || p.price;
+    document.getElementById('saleQuantity').value = '';
+    document.getElementById('saleQuantity').placeholder = 'Nhập số lượng bán';
+    document.getElementById('salePrice').value = '';
+    document.getElementById('salePrice').placeholder = this.formatCurrency(p.salePrice || p.price);
     document.getElementById('saleDate').value = new Date().toISOString().split('T')[0];
     document.getElementById('saleNote').value = '';
     this.calculateSaleTotal();
