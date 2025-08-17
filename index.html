@@ -12,9 +12,11 @@
   .header h1{font-size:1.5rem}
   .stats{display:flex;flex-wrap:wrap;justify-content:space-around;padding:12px}
   .stat-item h3{font-size:1.3rem}
-  .main-content{display:flex;flex-wrap:wrap}
-  .sidebar{flex:1 1 320px;padding:14px;background:#fafafa;border-right:1px solid #ddd}
-  .content-area{flex:3 1 600px;padding:14px}
+  .tabs{display:flex;background:#eee;border-bottom:1px solid #ccc}
+  .tabs button{flex:1;padding:12px;cursor:pointer;background:#eee;border:none;font-weight:bold}
+  .tabs button.active{background:#fff;border-bottom:2px solid #2196F3;color:#2196F3}
+  .tab-content{display:none;padding:14px}
+  .tab-content.active{display:block}
   label{display:block;margin-bottom:4px;font-weight:bold}
   input,select,textarea{width:100%;padding:10px;margin-bottom:8px;border:1px solid #ccc;border-radius:8px;font-size:1rem}
   .btn{padding:10px 14px;border-radius:8px;border:0;cursor:pointer;font-size:1rem}
@@ -39,9 +41,7 @@
   .modal-close{background:none;border:none;font-size:24px;cursor:pointer;color:#999}
   .modal-footer{display:flex;gap:8px;margin-top:15px;flex-wrap:wrap}
   @media(max-width:768px){
-    .main-content{flex-direction:column}
-    .sidebar{border-right:0;border-bottom:1px solid #ddd}
-    table{display:block;overflow-x:auto}
+    .tabs{flex-direction:column}
     .modal-content{padding:15px;border-radius:8px}
     .modal-footer{justify-content:stretch}
     .modal-footer .btn{flex:1}
@@ -55,54 +55,72 @@
     <div id="connectionStatus" style="margin-top:5px;font-size:0.9rem">🔄 Đang kết nối Firestore...</div>
     <div class="stats">
       <div class="stat-item"><h3 id="totalProducts">0</h3><p>Tổng sản phẩm</p></div>
-      <div class="stat-item"><h3 id="totalValue">0₫</h3><p>Tổng giá trị</p></div>
+      <div class="stat-item"><h3 id="totalValue">0₫</h3><p>Tổng giá trị tồn</p></div>
       <div class="stat-item"><h3 id="lowStock">0</h3><p>Sắp hết hàng</p></div>
+      <div class="stat-item"><h3 id="totalSales">0₫</h3><p>Tổng tiền đã bán</p></div>
     </div>
   </div>
-  <div class="main-content">
-    <div class="sidebar">
-      <h3>📦 Nhập / Cập nhật hàng</h3>
-      <form id="productForm">
-        <label>Tên sản phẩm</label><input id="productName" required>
-        <label>Mã sản phẩm</label><input id="productCode" required>
-        <label>Danh mục</label>
-        <select id="productCategory" required>
-          <option value="">Chọn danh mục</option>
-          <option>La Phôn Thường</option>
-          <option>La Phôn Ánh Kim</option>
-          <option>Khung Xương Trần Thả</option>
-          <option>Khung Xương Thạch Cao</option>
-          <option>Thạch Cao</option>
-          <option>Tấm Nhựa</option>
-          <option>Khác</option>
-        </select>
-        <label>Giá (VNĐ)</label><input id="productPrice" type="number" min="0" required>
-        <label>Số lượng nhập mới</label><input id="productNewStock" type="number" min="0" value="0">
-        <label>Ngày nhập hàng</label><input id="productImportDate" type="date">
-        <label>Mô tả</label><textarea id="productDescription" rows="2"></textarea>
-        <div style="display:flex;gap:6px;flex-wrap:wrap">
-          <button class="btn btn-success" id="submitBtn" type="submit">📦 Nhập hàng</button>
-          <button class="btn btn-warning" id="cancelBtn" type="button" style="display:none">Hủy</button>
-        </div>
-      </form>
-    </div>
-    <div class="content-area">
-      <input id="searchInput" class="search-bar" placeholder="🔍 Tìm kiếm theo tên hoặc mã">
-      <div id="alertContainer"></div>
-      <div class="product-grid" id="productGrid"></div>
 
-      <h3 style="margin-top:14px">📜 Lịch sử bán hàng</h3>
-      <table>
-        <thead><tr><th>Ngày</th><th>Sản phẩm</th><th>Mã</th><th>SL</th><th>Giá</th><th>Thành tiền</th><th>Ghi chú</th></tr></thead>
-        <tbody id="salesHistory"><tr><td colspan="7" style="text-align:center;color:#666">Chưa có giao dịch</td></tr></tbody>
-      </table>
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="active" onclick="openTab('overview')">📊 Tổng quan</button>
+    <button onclick="openTab('products')">📦 Sản phẩm</button>
+    <button onclick="openTab('sales')">💰 Lịch sử bán</button>
+    <button onclick="openTab('imports')">📜 Lịch sử nhập</button>
+  </div>
 
-      <h3 style="margin-top:14px">📦 Lịch sử nhập hàng</h3>
-      <table>
-        <thead><tr><th>Ngày nhập</th><th>Sản phẩm</th><th>Mã</th><th>SL nhập</th><th>Giá</th><th>Thành tiền</th><th>Ghi chú</th></tr></thead>
-        <tbody id="importHistory"><tr><td colspan="7" style="text-align:center;color:#666">Chưa có nhập hàng</td></tr></tbody>
-      </table>
-    </div>
+  <!-- Tab: Tổng quan -->
+  <div id="overview" class="tab-content active">
+    <h3>📦 Nhập / Cập nhật hàng</h3>
+    <form id="productForm">
+      <label>Tên sản phẩm</label><input id="productName" required>
+      <label>Mã sản phẩm</label><input id="productCode" required>
+      <label>Danh mục</label>
+      <select id="productCategory" required>
+        <option value="">Chọn danh mục</option>
+        <option>La Phôn Thường</option>
+        <option>La Phôn Ánh Kim</option>
+        <option>Khung Xương Trần Thả</option>
+        <option>Khung Xương Thạch Cao</option>
+        <option>Thạch Cao</option>
+        <option>Tấm Nhựa</option>
+        <option>Khác</option>
+      </select>
+      <label>Giá nhập (VNĐ)</label><input id="productImportPrice" type="number" min="0" required>
+      <label>Giá bán (VNĐ)</label><input id="productSellPrice" type="number" min="0" required>
+      <label>Số lượng nhập mới</label><input id="productNewStock" type="number" min="0" value="0">
+      <label>Ngày nhập hàng</label><input id="productImportDate" type="date">
+      <label>Mô tả</label><textarea id="productDescription" rows="2"></textarea>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn btn-success" id="submitBtn" type="submit">📦 Nhập hàng</button>
+        <button class="btn btn-warning" id="cancelBtn" type="button" style="display:none">Hủy</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Tab: Sản phẩm -->
+  <div id="products" class="tab-content">
+    <input id="searchInput" class="search-bar" placeholder="🔍 Tìm kiếm theo tên hoặc mã">
+    <div id="alertContainer"></div>
+    <div class="product-grid" id="productGrid"></div>
+  </div>
+
+  <!-- Tab: Lịch sử bán -->
+  <div id="sales" class="tab-content">
+    <h3>💰 Lịch sử bán hàng</h3>
+    <table>
+      <thead><tr><th>Ngày</th><th>Sản phẩm</th><th>Mã</th><th>SL</th><th>Giá</th><th>Thành tiền</th><th>Ghi chú</th></tr></thead>
+      <tbody id="salesHistory"><tr><td colspan="7" style="text-align:center;color:#666">Chưa có giao dịch</td></tr></tbody>
+    </table>
+  </div>
+
+  <!-- Tab: Lịch sử nhập -->
+  <div id="imports" class="tab-content">
+    <h3>📜 Lịch sử nhập hàng</h3>
+    <table>
+      <thead><tr><th>Ngày nhập</th><th>Sản phẩm</th><th>Mã</th><th>SL nhập</th><th>Giá</th><th>Thành tiền</th><th>Ghi chú</th></tr></thead>
+      <tbody id="importHistory"><tr><td colspan="7" style="text-align:center;color:#666">Chưa có nhập hàng</td></tr></tbody>
+    </table>
   </div>
 </div>
 
@@ -151,7 +169,15 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Khởi tạo collection nếu chưa có
+// Tabs
+window.openTab = function(tabId){
+  document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.tabs button').forEach(el=>el.classList.remove('active'));
+  document.getElementById(tabId).classList.add('active');
+  document.querySelector(`.tabs button[onclick="openTab('${tabId}')"]`).classList.add('active');
+};
+
+// Init collections
 async function initCollections() {
   for (let col of ["products","sales","imports"]) {
     const snap = await getDocs(collection(db,col));
@@ -160,7 +186,6 @@ async function initCollections() {
     }
   }
 }
-
 await initCollections();
 document.getElementById('connectionStatus').textContent = '✅ Kết nối Firestore thành công';
 
@@ -177,8 +202,6 @@ class WarehouseManager {
     document.getElementById('cancelBtn').addEventListener('click', ()=>this.cancelEdit());
     document.getElementById('searchInput').addEventListener('input', e=>this.renderProducts(e.target.value));
     document.getElementById('saleForm').addEventListener('submit', e=>this.confirmSale(e));
-    
-    // Tính thành tiền khi thay đổi số lượng hoặc giá
     document.getElementById('saleQuantity').addEventListener('input', ()=>this.calculateSaleTotal());
     document.getElementById('salePrice').addEventListener('input', ()=>this.calculateSaleTotal());
   }
@@ -193,6 +216,9 @@ class WarehouseManager {
       let arr = [];
       snap.forEach(docSnap => { if(!docSnap.data().init) arr.push(docSnap.data()); });
       this.renderHistory(arr,'salesHistory');
+      // update total sales
+      const total = arr.reduce((sum,s)=>sum+(s.total||0),0);
+      document.getElementById('totalSales').textContent = total.toLocaleString('vi-VN')+'₫';
     });
     onSnapshot(query(collection(db,'imports'), orderBy('date','desc')), snap=>{
       let arr = [];
@@ -205,7 +231,8 @@ class WarehouseManager {
     const name = document.getElementById('productName').value.trim();
     const code = document.getElementById('productCode').value.trim();
     const category = document.getElementById('productCategory').value;
-    const price = Number(document.getElementById('productPrice').value)||0;
+    const importPrice = Number(document.getElementById('productImportPrice').value)||0;
+    const sellPrice = Number(document.getElementById('productSellPrice').value)||0;
     const addStock = Number(document.getElementById('productNewStock').value)||0;
     const importDate = document.getElementById('productImportDate').value || new Date().toISOString().split('T')[0];
     const desc = document.getElementById('productDescription').value.trim();
@@ -214,18 +241,20 @@ class WarehouseManager {
       let p = this.products[this.editingId];
       const newStock = (p.stock||0) + addStock;
       await updateDoc(doc(db,'products',this.editingId), {
-        name, code, category, price, stock:newStock, description:desc, updatedAt: new Date().toISOString()
+        name, code, category, importPrice, sellPrice,
+        stock:newStock, description:desc, updatedAt: new Date().toISOString()
       });
       if(addStock>0){
-        await addDoc(collection(db,'imports'), { name, code, qty:addStock, price, total:addStock*price, date:importDate, note:"Nhập thêm", createdAt:new Date().toISOString() });
+        await addDoc(collection(db,'imports'), { name, code, qty:addStock, price:importPrice, total:addStock*importPrice, date:importDate, note:"Nhập thêm", createdAt:new Date().toISOString() });
       }
       this.showAlert('✅ Cập nhật hàng thành công','success');
     } else {
       const docRef = await addDoc(collection(db,'products'), {
-        name, code, category, price, stock:addStock, sold:0, description:desc, createdAt:new Date().toISOString(), updatedAt:new Date().toISOString()
+        name, code, category, importPrice, sellPrice,
+        stock:addStock, sold:0, description:desc, createdAt:new Date().toISOString(), updatedAt:new Date().toISOString()
       });
       if(addStock>0){
-        await addDoc(collection(db,'imports'), { name, code, qty:addStock, price, total:addStock*price, date:importDate, note:"Nhập mới", createdAt:new Date().toISOString() });
+        await addDoc(collection(db,'imports'), { name, code, qty:addStock, price:importPrice, total:addStock*importPrice, date:importDate, note:"Nhập mới", createdAt:new Date().toISOString() });
       }
       this.showAlert('✅ Nhập hàng thành công','success');
     }
@@ -237,7 +266,8 @@ class WarehouseManager {
     document.getElementById('productName').value = p.name;
     document.getElementById('productCode').value = p.code;
     document.getElementById('productCategory').value = p.category;
-    document.getElementById('productPrice').value = p.price;
+    document.getElementById('productImportPrice').value = p.importPrice||0;
+    document.getElementById('productSellPrice').value = p.sellPrice||0;
     document.getElementById('productNewStock').value = 0;
     document.getElementById('productImportDate').value = '';
     document.getElementById('productDescription').value = p.description || '';
@@ -253,8 +283,29 @@ class WarehouseManager {
     this.clearForm();
   }
   async deleteProduct(id){
+    if(!confirm("Bạn có chắc chắn muốn xóa sản phẩm này và toàn bộ lịch sử liên quan không?")) return;
+    const p = this.products[id];
+    if(!p) return;
+
     await deleteDoc(doc(db,'products',id));
-    this.showAlert('✅ Xóa sản phẩm','success');
+
+    // Xóa lịch sử nhập
+    const importSnap = await getDocs(collection(db,'imports'));
+    importSnap.forEach(async d=>{
+      if(d.data().code === p.code){
+        await deleteDoc(doc(db,'imports', d.id));
+      }
+    });
+
+    // Xóa lịch sử bán
+    const salesSnap = await getDocs(collection(db,'sales'));
+    salesSnap.forEach(async d=>{
+      if(d.data().code === p.code){
+        await deleteDoc(doc(db,'sales', d.id));
+      }
+    });
+
+    this.showAlert('✅ Đã xóa sản phẩm và toàn bộ lịch sử liên quan','success');
   }
   openSaleModal(id){
     const p = this.products[id];
@@ -262,14 +313,14 @@ class WarehouseManager {
     this.saleProductId = id;
     document.getElementById('saleProductInfo').innerHTML = `
       <h4>${p.name}</h4>
-      <div>Mã: ${p.code} | Tồn: ${p.stock} | Giá: ${p.price.toLocaleString('vi-VN')}₫</div>
+      <div>Mã: ${p.code} | Tồn: ${p.stock} | Giá bán: ${p.sellPrice.toLocaleString('vi-VN')}₫</div>
     `;
     document.getElementById('saleQuantity').max = p.stock;
     document.getElementById('saleQuantity').value = 1;
-    document.getElementById('salePrice').value = p.price;
+    document.getElementById('salePrice').value = p.sellPrice;
     document.getElementById('saleDate').value = new Date().toISOString().split('T')[0];
     document.getElementById('saleNote').value = '';
-    this.calculateSaleTotal(); // Tính thành tiền ban đầu
+    this.calculateSaleTotal();
     document.getElementById('saleModal').style.display = 'block';
   }
   calculateSaleTotal(){
@@ -323,7 +374,8 @@ class WarehouseManager {
         <h3>${p.name}</h3>
         <div><b>Mã:</b> ${p.code}</div>
         <div><b>Danh mục:</b> ${p.category}</div>
-        <div><b>Giá:</b> ${p.price.toLocaleString('vi-VN')}₫</div>
+        <div><b>Giá nhập:</b> ${p.importPrice.toLocaleString('vi-VN')}₫</div>
+        <div><b>Giá bán:</b> ${p.sellPrice.toLocaleString('vi-VN')}₫</div>
         <div><b>Tồn kho:</b> ${p.stock} ${low?'<span class="low">🔴 Sắp hết</span>':''}</div>
         <div><b>Đã bán:</b> ${p.sold||0}</div>
         ${p.description?`<div><b>Mô tả:</b> ${p.description}</div>`:''}
@@ -352,7 +404,7 @@ class WarehouseManager {
   updateStats(){
     let arr = Object.values(this.products).filter(p=>!p.init);
     document.getElementById('totalProducts').textContent = arr.length;
-    document.getElementById('totalValue').textContent = arr.reduce((a,p)=>a+(p.price||0)*(p.stock||0),0).toLocaleString('vi-VN')+'₫';
+    document.getElementById('totalValue').textContent = arr.reduce((a,p)=>a+(p.importPrice||0)*(p.stock||0),0).toLocaleString('vi-VN')+'₫';
     document.getElementById('lowStock').textContent = arr.filter(p=>(p.stock||0)<=10).length;
   }
   clearForm(){ document.getElementById('productForm').reset(); }
