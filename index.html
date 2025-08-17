@@ -15,12 +15,14 @@
   .stat-item h3{font-size:1.1rem;margin-bottom:2px}
   .stat-item p{font-size:0.85rem;opacity:0.9}
   
-  .tab-container{display:flex;background:#f8f9fa;border-bottom:1px solid #ddd;overflow-x:auto}
-  .tab{padding:12px 16px;cursor:pointer;border-bottom:3px solid transparent;transition:all 0.3s;white-space:nowrap;font-weight:500}
-  .tab.active{background:#fff;border-bottom-color:#2196F3;color:#2196F3}
-  .tab:hover{background:#e9ecef}
+  .tab-container{position:fixed;bottom:0;left:0;right:0;display:flex;background:#fff;border-top:1px solid #ddd;z-index:100;box-shadow:0 -2px 10px rgba(0,0,0,0.1)}
+  .tab{flex:1;padding:8px 4px;cursor:pointer;text-align:center;transition:all 0.3s;font-weight:500;font-size:11px;display:flex;flex-direction:column;align-items:center;gap:4px;border-top:3px solid transparent}
+  .tab.active{background:#f0f8ff;border-top-color:#2196F3;color:#2196F3}
+  .tab:hover{background:#f8f9fa}
+  .tab-icon{font-size:18px}
+  .tab-text{font-size:10px}
   
-  .tab-content{display:none;padding:16px}
+  .tab-content{display:none;padding:16px;padding-bottom:80px}
   .tab-content.active{display:block}
   
   label{display:block;margin-bottom:4px;font-weight:600;color:#333}
@@ -37,8 +39,17 @@
   
   .search-bar{padding:12px 16px;border-radius:25px;border:1px solid #ddd;margin-bottom:16px;width:100%;font-size:14px}
   .product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
-  .product-card{background:#fff;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.08);border-left:5px solid #2196F3;transition:transform 0.3s}
+  .product-card{background:#fff;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.08);border-left:5px solid;transition:transform 0.3s}
   .product-card:hover{transform:translateY(-2px)}
+  
+  /* Màu cho từng danh mục */
+  .category-la-phong-thuong{border-left-color:#2196F3}
+  .category-la-phong-anh-kim{border-left-color:#FF9800}
+  .category-khung-xuong-tran-tha{border-left-color:#4CAF50}
+  .category-khung-xuong-thach-cao{border-left-color:#9C27B0}
+  .category-thach-cao{border-left-color:#F44336}
+  .category-tam-nhua{border-left-color:#607D8B}
+  .category-khac{border-left-color:#795548}
   .product-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
   
   .alert{padding:12px;border-radius:8px;margin-bottom:16px;font-weight:500}
@@ -64,14 +75,18 @@
   .empty-state svg{width:48px;height:48px;margin-bottom:16px;opacity:0.5}
   
   @media(max-width:768px){
-    body{padding:4px;font-size:13px}
+    body{padding:4px;font-size:13px;padding-bottom:60px}
     .container{border-radius:8px}
     .header{padding:12px}
     .header h1{font-size:1.2rem}
-    .stats{grid-template-columns:repeat(3,1fr);gap:6px}
+    .stats{grid-template-columns:repeat(2,1fr);gap:6px}
     .stat-item{padding:6px}
-    .stat-item h3{font-size:1rem}
-    .tab-content{padding:12px}
+    .stat-item h3{font-size:0.9rem}
+    .stat-item p{font-size:0.75rem}
+    .tab-content{padding:12px;padding-bottom:70px}
+    .tab{padding:6px 2px;font-size:10px}
+    .tab-icon{font-size:16px}
+    .tab-text{font-size:9px}
     .product-grid{grid-template-columns:1fr;gap:12px}
     .product-card{padding:12px}
     .modal-content{padding:16px;border-radius:8px}
@@ -96,15 +111,28 @@
     <div class="stats">
       <div class="stat-item"><h3 id="totalProducts">0</h3><p>Tổng sản phẩm</p></div>
       <div class="stat-item"><h3 id="totalValue">0₫</h3><p>Tổng giá trị</p></div>
+      <div class="stat-item"><h3 id="totalSoldValue">0₫</h3><p>Tổng tiền bán được</p></div>
       <div class="stat-item"><h3 id="lowStock">0</h3><p>Sắp hết hàng</p></div>
     </div>
   </div>
   
   <div class="tab-container">
-    <div class="tab active" onclick="warehouse.switchTab('overview')">📊 Tổng quát</div>
-    <div class="tab" onclick="warehouse.switchTab('products')">📦 Sản phẩm</div>
-    <div class="tab" onclick="warehouse.switchTab('sales')">💰 Lịch sử bán</div>
-    <div class="tab" onclick="warehouse.switchTab('imports')">📥 Lịch sử nhập</div>
+    <div class="tab active" onclick="warehouse.switchTab('overview')">
+      <div class="tab-icon">📊</div>
+      <div class="tab-text">Tổng quát</div>
+    </div>
+    <div class="tab" onclick="warehouse.switchTab('products')">
+      <div class="tab-icon">📦</div>
+      <div class="tab-text">Sản phẩm</div>
+    </div>
+    <div class="tab" onclick="warehouse.switchTab('sales')">
+      <div class="tab-icon">💰</div>
+      <div class="tab-text">Bán hàng</div>
+    </div>
+    <div class="tab" onclick="warehouse.switchTab('imports')">
+      <div class="tab-icon">📥</div>
+      <div class="tab-text">Nhập hàng</div>
+    </div>
   </div>
 
   <!-- Tab Tổng quát -->
@@ -134,12 +162,22 @@
           </select>
           <div class="form-row">
             <div>
-              <label>Giá (VNĐ)</label>
+              <label>Giá nhập (VNĐ)</label>
               <input id="productPrice" type="number" min="0" required>
             </div>
             <div>
+              <label>Giá bán (VNĐ)</label>
+              <input id="productSalePrice" type="number" min="0" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div>
               <label>Số lượng nhập mới</label>
               <input id="productNewStock" type="number" min="0" value="0">
+            </div>
+            <div>
+              <label>Ngày nhập hàng</label>
+              <input id="productImportDate" type="date">
             </div>
           </div>
           <label>Ngày nhập hàng</label><input id="productImportDate" type="date">
@@ -284,6 +322,20 @@ class WarehouseManager {
     return new Intl.NumberFormat('vi-VN').format(amount) + '₫';
   }
 
+  // Lấy class CSS cho danh mục
+  getCategoryClass(category) {
+    const categoryMap = {
+      'La Phông Thường': 'category-la-phong-thuong',
+      'La Phông Ánh Kim': 'category-la-phong-anh-kim', 
+      'Khung Xương Trần Thả': 'category-khung-xuong-tran-tha',
+      'Khung Xương Thạch Cao': 'category-khung-xuong-thach-cao',
+      'Thạch Cao': 'category-thach-cao',
+      'Tấm Nhựa': 'category-tam-nhua',
+      'Khác': 'category-khac'
+    };
+    return categoryMap[category] || 'category-khac';
+  }
+
   // Chuyển đổi tab
   switchTab(tabName) {
     // Ẩn tất cả tab content
@@ -351,6 +403,7 @@ class WarehouseManager {
     const code = document.getElementById('productCode').value.trim();
     const category = document.getElementById('productCategory').value;
     const price = Number(document.getElementById('productPrice').value)||0;
+    const salePrice = Number(document.getElementById('productSalePrice').value)||0;
     const addStock = Number(document.getElementById('productNewStock').value)||0;
     const importDate = document.getElementById('productImportDate').value || new Date().toISOString().split('T')[0];
     const desc = document.getElementById('productDescription').value.trim();
@@ -359,7 +412,7 @@ class WarehouseManager {
       let p = this.products[this.editingId];
       const newStock = (p.stock||0) + addStock;
       await updateDoc(doc(db,'products',this.editingId), {
-        name, code, category, price, stock:newStock, description:desc, updatedAt: new Date().toISOString()
+        name, code, category, price, salePrice, stock:newStock, description:desc, updatedAt: new Date().toISOString()
       });
       if(addStock>0){
         await addDoc(collection(db,'imports'), { 
@@ -370,7 +423,7 @@ class WarehouseManager {
       this.showAlert('✅ Cập nhật hàng thành công','success');
     } else {
       const docRef = await addDoc(collection(db,'products'), {
-        name, code, category, price, stock:addStock, sold:0, description:desc, createdAt:new Date().toISOString(), updatedAt:new Date().toISOString()
+        name, code, category, price, salePrice, stock:addStock, sold:0, description:desc, createdAt:new Date().toISOString(), updatedAt:new Date().toISOString()
       });
       if(addStock>0){
         await addDoc(collection(db,'imports'), { 
@@ -390,6 +443,7 @@ class WarehouseManager {
     document.getElementById('productCode').value = p.code;
     document.getElementById('productCategory').value = p.category;
     document.getElementById('productPrice').value = p.price;
+    document.getElementById('productSalePrice').value = p.salePrice || p.price;
     document.getElementById('productNewStock').value = 0;
     document.getElementById('productImportDate').value = '';
     document.getElementById('productDescription').value = p.description || '';
@@ -450,11 +504,11 @@ class WarehouseManager {
     this.saleProductId = id;
     document.getElementById('saleProductInfo').innerHTML = `
       <h4>${p.name}</h4>
-      <div><strong>Mã:</strong> ${p.code} | <strong>Tồn:</strong> ${p.stock} | <strong>Giá:</strong> ${this.formatCurrency(p.price)}</div>
+      <div><strong>Mã:</strong> ${p.code} | <strong>Tồn:</strong> ${p.stock} | <strong>Giá nhập:</strong> ${this.formatCurrency(p.price)} | <strong>Giá bán:</strong> ${this.formatCurrency(p.salePrice || p.price)}</div>
     `;
     document.getElementById('saleQuantity').max = p.stock;
     document.getElementById('saleQuantity').value = 1;
-    document.getElementById('salePrice').value = p.price;
+    document.getElementById('salePrice').value = p.salePrice || p.price;
     document.getElementById('saleDate').value = new Date().toISOString().split('T')[0];
     document.getElementById('saleNote').value = '';
     this.calculateSaleTotal();
@@ -516,11 +570,13 @@ class WarehouseManager {
     
     grid.innerHTML = arr.map(p=>{
       const low = (p.stock||0)<=10;
-      return `<div class="product-card">
+      const categoryClass = this.getCategoryClass(p.category);
+      return `<div class="product-card ${categoryClass}">
         <h3>${p.name}</h3>
         <div><strong>Mã:</strong> ${p.code}</div>
         <div><strong>Danh mục:</strong> ${p.category}</div>
-        <div><strong>Giá:</strong> ${this.formatCurrency(p.price)}</div>
+        <div><strong>Giá nhập:</strong> ${this.formatCurrency(p.price)}</div>
+        <div><strong>Giá bán:</strong> ${this.formatCurrency(p.salePrice || p.price)}</div>
         <div><strong>Tồn kho:</strong> ${p.stock} ${low?'<span class="low">🔴 Sắp hết</span>':''}</div>
         <div><strong>Đã bán:</strong> ${p.sold||0}</div>
         ${p.description?`<div><strong>Mô tả:</strong> ${p.description}</div>`:''}
@@ -550,11 +606,13 @@ class WarehouseManager {
     
     grid.innerHTML = arr.map(p=>{
       const low = (p.stock||0)<=10;
-      return `<div class="product-card">
+      const categoryClass = this.getCategoryClass(p.category);
+      return `<div class="product-card ${categoryClass}">
         <h3>${p.name}</h3>
         <div><strong>Mã:</strong> ${p.code}</div>
         <div><strong>Danh mục:</strong> ${p.category}</div>
-        <div><strong>Giá:</strong> ${this.formatCurrency(p.price)}</div>
+        <div><strong>Giá nhập:</strong> ${this.formatCurrency(p.price)}</div>
+        <div><strong>Giá bán:</strong> ${this.formatCurrency(p.salePrice || p.price)}</div>
         <div><strong>Tồn kho:</strong> ${p.stock} ${low?'<span class="low">🔴 Sắp hết</span>':''}</div>
         <div><strong>Đã bán:</strong> ${p.sold||0}</div>
         ${p.description?`<div><strong>Mô tả:</strong> ${p.description}</div>`:''}
@@ -591,8 +649,11 @@ class WarehouseManager {
 
   updateStats(){
     let arr = Object.values(this.products);
+    const totalSoldValue = this.sales.reduce((total, sale) => total + (sale.total || 0), 0);
+    
     document.getElementById('totalProducts').textContent = arr.length;
     document.getElementById('totalValue').textContent = this.formatCurrency(arr.reduce((a,p)=>a+(p.price||0)*(p.stock||0),0));
+    document.getElementById('totalSoldValue').textContent = this.formatCurrency(totalSoldValue);
     document.getElementById('lowStock').textContent = arr.filter(p=>(p.stock||0)<=10).length;
   }
 
