@@ -373,7 +373,7 @@ class WarehouseManager {
       });
       this.renderProducts();
       this.renderOverview();
-      this.updateStats();
+      // Không gọi updateStats() ở đây nữa vì sẽ gọi sau khi có dữ liệu sales
     });
 
     onSnapshot(query(collection(db,'sales'), orderBy('date','desc')), snap=>{
@@ -384,6 +384,7 @@ class WarehouseManager {
         }
       });
       this.renderHistory(this.sales,'salesHistory', 'sales');
+      this.updateStats(); // Cập nhật stats sau khi có dữ liệu sales
     });
 
     onSnapshot(query(collection(db,'imports'), orderBy('date','desc')), snap=>{
@@ -394,6 +395,7 @@ class WarehouseManager {
         }
       });
       this.renderHistory(this.imports,'importHistory', 'imports');
+      this.updateStats(); // Đảm bảo stats được cập nhật sau khi có cả products và sales/imports
     });
   }
 
@@ -649,6 +651,7 @@ class WarehouseManager {
 
   updateStats(){
     let arr = Object.values(this.products);
+    // Tính tổng tiền bán được từ lịch sử bán hàng thực tế
     const totalSoldValue = this.sales.reduce((total, sale) => total + (sale.total || 0), 0);
     
     document.getElementById('totalProducts').textContent = arr.length;
