@@ -180,7 +180,6 @@
               <input id="productImportDate" type="date">
             </div>
           </div>
-          <label>Ngày nhập hàng</label><input id="productImportDate" type="date">
           <label>Mô tả</label><textarea id="productDescription" rows="2" onfocus="this.select()"></textarea>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn btn-success" id="submitBtn" type="submit">📦 Nhập hàng</button>
@@ -364,6 +363,7 @@ class WarehouseManager {
   }
 
   listenData(){
+    // Real-time listener cho products
     onSnapshot(collection(db,'products'), snap=>{
       this.products = {};
       snap.forEach(docSnap => { 
@@ -376,6 +376,7 @@ class WarehouseManager {
       // Không gọi updateStats() ở đây nữa vì sẽ gọi sau khi có dữ liệu sales
     });
 
+    // Real-time listener cho sales
     onSnapshot(query(collection(db,'sales'), orderBy('date','desc')), snap=>{
       this.sales = [];
       snap.forEach(docSnap => { 
@@ -387,6 +388,7 @@ class WarehouseManager {
       this.updateStats(); // Cập nhật stats sau khi có dữ liệu sales
     });
 
+    // Real-time listener cho imports
     onSnapshot(query(collection(db,'imports'), orderBy('date','desc')), snap=>{
       this.imports = [];
       snap.forEach(docSnap => { 
