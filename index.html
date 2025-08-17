@@ -1,267 +1,618 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quản lý kho La Phông - PHONG PHÁT</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <style>
-    body { font-family: Arial, sans-serif; background:#f8f9fa; }
-    .tabs { position: fixed; bottom:0; left:0; right:0; display:flex; background:#fff; border-top:1px solid #ccc; }
-    .tab { flex:1; text-align:center; padding:12px; cursor:pointer; font-size:15px; }
-    .tab.active { background:#e9ecef; font-weight:bold; }
-    .tab-content { display:none; padding:15px; margin-bottom:70px; }
-    .product-card { border-radius:12px; padding:12px; margin-bottom:12px; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
-    .badge-cat { padding:5px 10px; border-radius:12px; font-size:13px; }
-    .btn-sm { padding:6px 12px; font-size:14px; }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Quản lý Kho La Phông - PHONG PHÁT</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif;background:#f4f6f9;min-height:100vh;padding:8px;font-size:14px}
+  .container{max-width:1200px;margin:auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.1)}
+  .header{background:linear-gradient(45deg,#2196F3,#21CBF3);color:#fff;padding:16px;text-align:center}
+  .header h1{font-size:1.4rem;margin-bottom:8px}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-top:12px}
+  .stat-item{text-align:center;background:rgba(255,255,255,0.1);padding:8px;border-radius:8px}
+  .stat-item h3{font-size:1.1rem;margin-bottom:2px}
+  .stat-item p{font-size:0.85rem;opacity:0.9}
+  
+  .tab-container{display:flex;background:#f8f9fa;border-bottom:1px solid #ddd;overflow-x:auto}
+  .tab{padding:12px 16px;cursor:pointer;border-bottom:3px solid transparent;transition:all 0.3s;white-space:nowrap;font-weight:500}
+  .tab.active{background:#fff;border-bottom-color:#2196F3;color:#2196F3}
+  .tab:hover{background:#e9ecef}
+  
+  .tab-content{display:none;padding:16px}
+  .tab-content.active{display:block}
+  
+  label{display:block;margin-bottom:4px;font-weight:600;color:#333}
+  input,select,textarea{width:100%;padding:12px;margin-bottom:10px;border:1px solid #ddd;border-radius:8px;font-size:14px;transition:border-color 0.3s}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:#2196F3;box-shadow:0 0 0 2px rgba(33,150,243,0.1)}
+  
+  .btn{padding:10px 16px;border-radius:8px;border:0;cursor:pointer;font-size:14px;font-weight:500;transition:all 0.3s;display:inline-flex;align-items:center;gap:6px}
+  .btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,0.15)}
+  .btn-primary{background:#2196F3;color:#fff}
+  .btn-success{background:#4CAF50;color:#fff}
+  .btn-warning{background:#ff9800;color:#fff}
+  .btn-danger{background:#f44336;color:#fff}
+  .btn-small{padding:6px 10px;font-size:12px}
+  
+  .search-bar{padding:12px 16px;border-radius:25px;border:1px solid #ddd;margin-bottom:16px;width:100%;font-size:14px}
+  .product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+  .product-card{background:#fff;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.08);border-left:5px solid #2196F3;transition:transform 0.3s}
+  .product-card:hover{transform:translateY(-2px)}
+  .product-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+  
+  .alert{padding:12px;border-radius:8px;margin-bottom:16px;font-weight:500}
+  .alert-success{background:#d4edda;color:#155724;border:1px solid #c3e6cb}
+  .alert-error{background:#f8d7da;color:#721c24;border:1px solid #f5c6cb}
+  
+  .data-table{width:100%;border-collapse:collapse;margin-top:16px;background:#fff;border-radius:8px;overflow:hidden;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,0.05)}
+  .data-table th,.data-table td{padding:10px 8px;border-bottom:1px solid #eee;text-align:left}
+  .data-table th{background:#f8f9fa;font-weight:600;color:#495057}
+  .data-table tr:hover{background:#f8f9fa}
+  .low{color:#dc3545;font-weight:bold}
+  
+  .modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;display:none}
+  .modal-content{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;padding:24px;border-radius:12px;width:90%;max-width:450px;max-height:90vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,0.2)}
+  .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;border-bottom:1px solid #eee;padding-bottom:12px}
+  .modal-close{background:none;border:none;font-size:24px;cursor:pointer;color:#999;padding:4px}
+  .modal-footer{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+  
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .form-group{background:#f8f9fa;padding:12px;border-radius:8px;margin-bottom:12px}
+  
+  .empty-state{text-align:center;padding:40px 20px;color:#6c757d}
+  .empty-state svg{width:48px;height:48px;margin-bottom:16px;opacity:0.5}
+  
+  @media(max-width:768px){
+    body{padding:4px;font-size:13px}
+    .container{border-radius:8px}
+    .header{padding:12px}
+    .header h1{font-size:1.2rem}
+    .stats{grid-template-columns:repeat(3,1fr);gap:6px}
+    .stat-item{padding:6px}
+    .stat-item h3{font-size:1rem}
+    .tab-content{padding:12px}
+    .product-grid{grid-template-columns:1fr;gap:12px}
+    .product-card{padding:12px}
+    .modal-content{padding:16px;border-radius:8px}
+    .modal-footer{justify-content:stretch}
+    .modal-footer .btn{flex:1}
+    .data-table{display:block;overflow-x:auto;white-space:nowrap}
+    .data-table th,.data-table td{padding:8px 6px;font-size:12px}
+    .form-row{grid-template-columns:1fr}
+    .product-actions{flex-direction:column}
+    .product-actions .btn{justify-content:center}
+  }
+  
+  .delete-btn{background:#dc3545;color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;font-size:11px}
+  .delete-btn:hover{background:#c82333}
+</style>
 </head>
 <body>
-  <!-- Đăng nhập -->
-  <div id="loginScreen" class="d-flex justify-content-center align-items-center vh-100 bg-light">
-    <div class="card p-4 shadow" style="width:350px;">
-      <h4 class="text-center mb-3">Đăng nhập</h4>
-      <input id="loginEmail" type="email" class="form-control mb-2" placeholder="Email">
-      <input id="loginPass" type="password" class="form-control mb-2" placeholder="Mật khẩu">
-      <button onclick="login()" class="btn btn-primary w-100 mb-2">Đăng nhập</button>
-      <button onclick="register()" class="btn btn-secondary w-100">Đăng ký</button>
+<div class="container">
+  <div class="header">
+    <h1>🏪 Quản lý Kho La Phông - PHONG PHÁT</h1>
+    <div id="connectionStatus" style="margin-top:5px;font-size:0.9rem">🔄 Đang kết nối Firestore...</div>
+    <div class="stats">
+      <div class="stat-item"><h3 id="totalProducts">0</h3><p>Tổng sản phẩm</p></div>
+      <div class="stat-item"><h3 id="totalValue">0₫</h3><p>Tổng giá trị</p></div>
+      <div class="stat-item"><h3 id="lowStock">0</h3><p>Sắp hết hàng</p></div>
     </div>
   </div>
+  
+  <div class="tab-container">
+    <div class="tab active" onclick="warehouse.switchTab('overview')">📊 Tổng quát</div>
+    <div class="tab" onclick="warehouse.switchTab('products')">📦 Sản phẩm</div>
+    <div class="tab" onclick="warehouse.switchTab('sales')">💰 Lịch sử bán</div>
+    <div class="tab" onclick="warehouse.switchTab('imports')">📥 Lịch sử nhập</div>
+  </div>
 
-  <!-- App -->
-  <div id="appContainer" style="display:none;">
-    <div class="container-fluid">
-      <button onclick="logout()" class="btn btn-danger position-absolute top-0 end-0 m-2">Đăng xuất</button>
-      <div id="alertContainer"></div>
+  <!-- Tab Tổng quát -->
+  <div id="overview" class="tab-content active">
+    <h3 style="margin-bottom:16px">📊 Tổng quan kho hàng</h3>
+    <div class="product-grid" id="overviewGrid"></div>
+  </div>
 
-      <!-- Tổng quan -->
-      <div id="overview" class="tab-content">
-        <h4>Tổng quan</h4>
-        <div class="row text-center">
-          <div class="col-6 col-md-3"><div class="card p-3"><strong id="totalProducts">0</strong><div>Sản phẩm</div></div></div>
-          <div class="col-6 col-md-3"><div class="card p-3"><strong id="totalValue">0₫</strong><div>Giá trị nhập</div></div></div>
-          <div class="col-6 col-md-3"><div class="card p-3"><strong id="lowStock">0</strong><div>Sắp hết</div></div></div>
-          <div class="col-6 col-md-3"><div class="card p-3"><strong id="totalSales">0₫</strong><div>Đã bán</div></div></div>
-        </div>
-
-        <h5 class="mt-3">Nhập hàng</h5>
-        <form id="productForm" onsubmit="warehouse.saveProduct(event)" class="row g-2">
-          <div class="col-6"><input id="productName" class="form-control" placeholder="Tên sản phẩm" required></div>
-          <div class="col-6"><input id="productCode" class="form-control" placeholder="Mã sản phẩm" required></div>
-          <div class="col-6"><select id="productCategory" class="form-control" required></select></div>
-          <div class="col-6"><input id="productImportPrice" type="number" class="form-control" placeholder="Giá nhập" required></div>
-          <div class="col-6"><input id="productSellPrice" type="number" class="form-control" placeholder="Giá bán" required></div>
-          <div class="col-6"><input id="productStock" type="number" class="form-control" placeholder="Số lượng nhập" required></div>
-          <div class="col-12"><textarea id="productDesc" class="form-control" placeholder="Mô tả"></textarea></div>
-          <div class="col-12"><button type="submit" class="btn btn-success w-100">Lưu</button></div>
+  <!-- Tab Sản phẩm -->
+  <div id="products" class="tab-content">
+    <div style="display:grid;grid-template-columns:1fr 2fr;gap:20px">
+      <div>
+        <h3 style="margin-bottom:12px">📦 Nhập / Cập nhật hàng</h3>
+        <form id="productForm">
+          <label>Tên sản phẩm</label><input id="productName" required>
+          <label>Mã sản phẩm</label><input id="productCode" required>
+          <label>Danh mục</label>
+          <select id="productCategory" required>
+            <option value="">Chọn danh mục</option>
+            <option>La Phông Thường</option>
+            <option>La Phông Ánh Kim</option>
+            <option>Khung Xương Trần Thả</option>
+            <option>Khung Xương Thạch Cao</option>
+            <option>Thạch Cao</option>
+            <option>Tấm Nhựa</option>
+            <option>Khác</option>
+          </select>
+          <div class="form-row">
+            <div>
+              <label>Giá (VNĐ)</label>
+              <input id="productPrice" type="number" min="0" required>
+            </div>
+            <div>
+              <label>Số lượng nhập mới</label>
+              <input id="productNewStock" type="number" min="0" value="0">
+            </div>
+          </div>
+          <label>Ngày nhập hàng</label><input id="productImportDate" type="date">
+          <label>Mô tả</label><textarea id="productDescription" rows="2"></textarea>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-success" id="submitBtn" type="submit">📦 Nhập hàng</button>
+            <button class="btn btn-warning" id="cancelBtn" type="button" style="display:none">Hủy</button>
+          </div>
         </form>
       </div>
-
-      <!-- Sản phẩm -->
-      <div id="products" class="tab-content">
-        <h4>Danh sách sản phẩm</h4>
-        <div id="productList"></div>
+      <div>
+        <input id="searchInput" class="search-bar" placeholder="🔍 Tìm kiếm theo tên hoặc mã">
+        <div id="alertContainer"></div>
+        <div class="product-grid" id="productGrid"></div>
       </div>
-
-      <!-- Bán -->
-      <div id="sales" class="tab-content">
-        <h4>Lịch sử bán</h4>
-        <table class="table table-sm table-bordered">
-          <thead><tr><th>Ngày</th><th>Tên</th><th>SL</th><th>Tổng</th><th>Mô tả</th><th>Xóa</th></tr></thead>
-          <tbody id="salesHistory"></tbody>
-        </table>
-      </div>
-
-      <!-- Nhập -->
-      <div id="imports" class="tab-content">
-        <h4>Lịch sử nhập</h4>
-        <table class="table table-sm table-bordered">
-          <thead><tr><th>Ngày</th><th>Tên</th><th>SL</th><th>Tổng</th><th>Xóa</th></tr></thead>
-          <tbody id="importHistory"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Tabs -->
-    <div class="tabs">
-      <div class="tab" onclick="openTab('overview',this)">Tổng quan</div>
-      <div class="tab" onclick="openTab('products',this)">Sản phẩm</div>
-      <div class="tab" onclick="openTab('sales',this)">Bán</div>
-      <div class="tab" onclick="openTab('imports',this)">Nhập</div>
     </div>
   </div>
 
-  <!-- Modal bán -->
-  <div class="modal fade" id="saleModal" tabindex="-1">
-    <div class="modal-dialog"><div class="modal-content">
-      <div class="modal-header"><h5>Bán sản phẩm</h5></div>
-      <div class="modal-body">
-        <p><b id="saleProductName"></b> (Tồn: <span id="saleStock"></span>)</p>
-        <p>Giá bán: <span id="salePrice"></span></p>
-        <p>Mô tả: <span id="saleDesc"></span></p>
-        <input type="number" id="saleQty" class="form-control mb-2" placeholder="Số lượng">
-        <p>Thành tiền: <span id="saleTotal">0</span></p>
+  <!-- Tab Lịch sử bán hàng -->
+  <div id="sales" class="tab-content">
+    <h3 style="margin-bottom:16px">💰 Lịch sử bán hàng</h3>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Ngày</th>
+          <th>Sản phẩm</th>
+          <th>Mã</th>
+          <th>SL</th>
+          <th>Giá</th>
+          <th>Thành tiền</th>
+          <th>Ghi chú</th>
+          <th>Thao tác</th>
+        </tr>
+      </thead>
+      <tbody id="salesHistory">
+        <tr><td colspan="8" class="empty-state">Chưa có giao dịch</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Tab Lịch sử nhập hàng -->
+  <div id="imports" class="tab-content">
+    <h3 style="margin-bottom:16px">📥 Lịch sử nhập hàng</h3>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Ngày nhập</th>
+          <th>Sản phẩm</th>
+          <th>Mã</th>
+          <th>SL nhập</th>
+          <th>Giá</th>
+          <th>Thành tiền</th>
+          <th>Ghi chú</th>
+          <th>Thao tác</th>
+        </tr>
+      </thead>
+      <tbody id="importHistory">
+        <tr><td colspan="8" class="empty-state">Chưa có nhập hàng</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal Bán Hàng -->
+<div id="saleModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>💰 Bán Hàng</h3>
+      <button class="modal-close" onclick="warehouse.closeSaleModal()">&times;</button>
+    </div>
+    <form id="saleForm">
+      <div id="saleProductInfo" class="form-group"></div>
+      <div class="form-row">
+        <div>
+          <label>Số lượng bán</label>
+          <input id="saleQuantity" type="number" min="1" required>
+        </div>
+        <div>
+          <label>Giá bán (VNĐ)</label>
+          <input id="salePrice" type="number" min="0" required>
+        </div>
       </div>
+      <div class="form-group" style="background:#e3f2fd">
+        <strong>💰 Thành tiền: <span id="saleTotal">0₫</span></strong>
+      </div>
+      <label>Ngày bán</label>
+      <input id="saleDate" type="date" required>
+      <label>Ghi chú</label>
+      <textarea id="saleNote" rows="2" placeholder="Khách hàng, ghi chú..."></textarea>
       <div class="modal-footer">
-        <button class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-        <button class="btn btn-success" onclick="warehouse.confirmSale()">Bán</button>
+        <button class="btn btn-success" type="submit">💰 Xác nhận bán</button>
+        <button class="btn" type="button" onclick="warehouse.closeSaleModal()">Hủy</button>
       </div>
-    </div></div>
+    </form>
   </div>
+</div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, doc, setDoc, addDoc, getDocs, onSnapshot, updateDoc, deleteDoc, query, orderBy, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyB06U8J2owwj03mOU2MdcGlMnNxA0NN3Ms",
-      authDomain: "la-phon-phong-phat.firebaseapp.com",
-      projectId: "la-phon-phong-phat",
-      storageBucket: "la-phon-phong-phat.firebasestorage.app",
-      messagingSenderId: "643189174098",
-      appId: "1:643189174098:web:ed119570c5cb2e36e8148b",
-      measurementId: "G-BCK9B2Z2J6"
-    };
+const firebaseConfig = {
+  apiKey: "AIzaSyB06U8J2owwj03mOU2MdcGlMnNxA0NN3Ms",
+  authDomain: "la-phon-phong-phat.firebaseapp.com",
+  projectId: "la-phon-phong-phat",
+  storageBucket: "la-phon-phong-phat.firebasestorage.app",
+  messagingSenderId: "643189174098",
+  appId: "1:643189174098:web:ed119570c5cb2e36e8148b",
+  measurementId: "G-BCK9B2Z2J6"
+};
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-    let role = "seller";
-    let currentUser = null;
-    let editingId = null;
-    let saleProduct = null;
-
-    const categories = ["La phông ánh kim","La phông nhựa","La phông vĩnh tường","Khung xương trần thả","Khung xương thạch cao","Tấm thạch cao","Nano","Phụ kiện khác"];
-    const categoryColors = { "La phông ánh kim":"#cce5ff","La phông nhựa":"#cce5ff","La phông vĩnh tường":"#cce5ff","Khung xương trần thả":"#ffeeba","Khung xương thạch cao":"#ffeeba","Tấm thạch cao":"#d4edda","Nano":"#d4edda","Phụ kiện khác":"#e2e3e5" };
-    const catSelect = document.getElementById("productCategory");
-    categories.forEach(c => { let o=document.createElement("option");o.value=c;o.textContent=c;catSelect.appendChild(o); });
-
-    function openTab(id, el){
-      document.querySelectorAll(".tab-content").forEach(t=>t.style.display="none");
-      document.getElementById(id).style.display="block";
-      document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
-      if(el) el.classList.add("active");
+// Khởi tạo collection nếu chưa có
+async function initCollections() {
+  for (let col of ["products","sales","imports"]) {
+    const snap = await getDocs(collection(db,col));
+    if (snap.empty) {
+      await addDoc(collection(db,col), { init: true, createdAt: new Date().toISOString() });
     }
-    openTab("overview", document.querySelector(".tab"));
+  }
+}
 
-    function showAlert(msg,type="success"){
-      document.getElementById("alertContainer").innerHTML=`<div class="alert alert-${type}">${msg}</div>`;
-      setTimeout(()=>document.getElementById("alertContainer").innerHTML="",3000);
-    }
+await initCollections();
+document.getElementById('connectionStatus').textContent = '✅ Kết nối Firestore thành công';
 
-    async function login(){ try{ await signInWithEmailAndPassword(auth, loginEmail.value, loginPass.value); }catch(e){showAlert(e.message,"danger");}}
-    async function register(){ try{ await createUserWithEmailAndPassword(auth, loginEmail.value, loginPass.value); }catch(e){showAlert(e.message,"danger");}}
-    function logout(){signOut(auth);}
+class WarehouseManager {
+  constructor(){
+    this.products = {};
+    this.sales = [];
+    this.imports = [];
+    this.editingId = null;
+    this.saleProductId = null;
+    this.currentTab = 'overview';
+    this.initEvents();
+    this.listenData();
+  }
 
-    onAuthStateChanged(auth, (user) => {
-      const loginEl = document.getElementById("loginScreen");
-      const appEl = document.getElementById("appContainer");
-      if(user){
-        currentUser=user;
-        role=user.email.includes("stock")?"stock":"seller";
-        loginEl.style.display="none";
-        appEl.style.display="block";
-        warehouse.listen();
-      } else {
-        currentUser=null;
-        appEl.style.display="none";
-        loginEl.style.display="flex";
-      }
+  // Format tiền tệ VNĐ
+  formatCurrency(amount) {
+    return new Intl.NumberFormat('vi-VN').format(amount) + '₫';
+  }
+
+  // Chuyển đổi tab
+  switchTab(tabName) {
+    // Ẩn tất cả tab content
+    document.querySelectorAll('.tab-content').forEach(tab => {
+      tab.classList.remove('active');
+    });
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.classList.remove('active');
+    });
+    
+    // Hiển thị tab được chọn
+    document.getElementById(tabName).classList.add('active');
+    document.querySelector(`.tab[onclick*="${tabName}"]`).classList.add('active');
+    this.currentTab = tabName;
+  }
+
+  initEvents(){
+    document.getElementById('productForm').addEventListener('submit', e=>this.saveProduct(e));
+    document.getElementById('cancelBtn').addEventListener('click', ()=>this.cancelEdit());
+    document.getElementById('searchInput').addEventListener('input', e=>this.renderProducts(e.target.value));
+    document.getElementById('saleForm').addEventListener('submit', e=>this.confirmSale(e));
+    
+    // Tính thành tiền khi thay đổi số lượng hoặc giá
+    document.getElementById('saleQuantity').addEventListener('input', ()=>this.calculateSaleTotal());
+    document.getElementById('salePrice').addEventListener('input', ()=>this.calculateSaleTotal());
+  }
+
+  listenData(){
+    onSnapshot(collection(db,'products'), snap=>{
+      this.products = {};
+      snap.forEach(docSnap => { 
+        if(!docSnap.data().init) {
+          this.products[docSnap.id] = {id:docSnap.id, ...docSnap.data()}; 
+        }
+      });
+      this.renderProducts();
+      this.renderOverview();
+      this.updateStats();
     });
 
-    class WarehouseManager{
-      constructor(){ this.productsCol=collection(db,"products"); this.salesCol=collection(db,"sales"); this.importsCol=collection(db,"imports"); }
-      listen(){
-        onSnapshot(this.productsCol,snap=>{ this.renderProducts(snap.docs.map(d=>({id:d.id,...d.data()}))); this.updateStats(snap.docs.map(d=>d.data())); });
-        onSnapshot(this.salesCol,snap=>{ this.renderSales(snap.docs.map(d=>({id:d.id,...d.data()}))); });
-        onSnapshot(this.importsCol,snap=>{ this.renderImports(snap.docs.map(d=>({id:d.id,...d.data()}))); });
-      }
-      async saveProduct(e){ 
-        e.preventDefault(); 
-        let data={ name:productName.value, code:productCode.value, category:productCategory.value, importPrice:+productImportPrice.value, sellPrice:+productSellPrice.value, stock:+productStock.value, sold:0, desc:productDesc.value }; 
-        if(editingId){ 
-          await updateDoc(doc(db,"products",editingId),data); editingId=null; 
-        } else { 
-          await addDoc(this.productsCol,data); 
-          await addDoc(this.importsCol,{...data,quantity:data.stock,total:data.importPrice*data.stock,createdAt:Date.now(),user:currentUser.email}); 
-        } 
-        e.target.reset(); showAlert("Lưu thành công"); 
-      }
-      async deleteProduct(id){ if(role!=="stock"){showAlert("Chỉ stock được xóa","danger");return;} await deleteDoc(doc(db,"products",id)); showAlert("Đã xóa sản phẩm"); }
-      editProduct(p){ editingId=p.id; productName.value=p.name;productCode.value=p.code;productCategory.value=p.category;productImportPrice.value=p.importPrice;productSellPrice.value=p.sellPrice;productStock.value=p.stock;productDesc.value=p.desc; openTab("overview"); }
-      sellProduct(p){ 
-        saleProduct=p; 
-        saleProductName.textContent=p.name; 
-        saleStock.textContent=p.stock; 
-        salePrice.textContent=p.sellPrice+"₫"; 
-        saleDesc.textContent=p.desc||"Không có"; 
-        saleQty.value=""; 
-        saleTotal.textContent="0"; 
-        new bootstrap.Modal(document.getElementById("saleModal")).show(); 
-      }
-      async confirmSale(){ 
-        let qty=+saleQty.value; 
-        if(qty<=0||qty>saleProduct.stock){showAlert("SL không hợp lệ","danger");return;} 
-        let total=qty*saleProduct.sellPrice; 
-        await updateDoc(doc(db,"products",saleProduct.id),{stock:saleProduct.stock-qty,sold:(saleProduct.sold||0)+qty}); 
-        await addDoc(this.salesCol,{productId:saleProduct.id,name:saleProduct.name,code:saleProduct.code,desc:saleProduct.desc,quantity:qty,price:saleProduct.sellPrice,total,createdAt:Date.now(),user:currentUser.email}); 
-        bootstrap.Modal.getInstance(document.getElementById("saleModal")).hide(); 
-        showAlert("Đã bán"); 
-      }
-      async deleteHistory(col,id,item){ 
-        if(role==="stock"){await deleteDoc(doc(db,col,id));} 
-        else { let last=this.lastSellerSale; if(item.user===currentUser.email&&item.id===last){await deleteDoc(doc(db,col,id));} else {showAlert("Seller chỉ được xóa lần bán gần nhất","danger");}} 
-      }
-      renderProducts(list){ 
-        let html=""; 
-        list.forEach(p=>{ 
-          html+=`<div class="product-card" style="background:${categoryColors[p.category]||'#fff'}">
-            <h5>${p.name}</h5><span class="badge-cat">${p.category}</span>
-            <p>Mã:${p.code} | Tồn:${p.stock} | Bán:${p.sold||0}</p>
-            <p>Giá nhập:${p.importPrice}₫ | Giá bán:${p.sellPrice}₫</p>
-            <p>${p.desc||""}</p>
-            <button class="btn btn-sm btn-success me-1" onclick='warehouse.sellProduct(${JSON.stringify(p)})'>Bán</button>
-            ${role==="stock"?`<button class="btn btn-sm btn-primary me-1" onclick='warehouse.editProduct(${JSON.stringify(p)})'>Cập nhật</button><button class="btn btn-sm btn-danger" onclick='warehouse.deleteProduct("${p.id}")'>Xóa</button>`:""}
-          </div>`; 
-        }); 
-        document.getElementById("productList").innerHTML=html; 
-      }
-      renderSales(list){ 
-        list.sort((a,b)=>b.createdAt-a.createdAt); 
-        if(list.length>0)this.lastSellerSale=list.find(i=>i.user===currentUser.email)?.id; 
-        let html=""; 
-        list.forEach(i=>{ 
-          html+=`<tr>
-            <td>${new Date(i.createdAt).toLocaleString()}</td>
-            <td>${i.name}</td>
-            <td>${i.quantity}</td>
-            <td>${i.total}₫</td>
-            <td>${i.desc||""}</td>
-            <td><button class="btn btn-sm btn-danger" onclick='warehouse.deleteHistory("sales","${i.id}",${JSON.stringify(i)})'>Xóa</button></td>
-          </tr>`; 
-        }); 
-        document.getElementById("salesHistory").innerHTML=html; 
-      }
-      renderImports(list){ 
-        list.sort((a,b)=>b.createdAt-a.createdAt); 
-        let html=""; 
-        list.forEach(i=>{ 
-          html+=`<tr><td>${new Date(i.createdAt).toLocaleString()}</td><td>${i.name}</td><td>${i.stock}</td><td>${i.total}₫</td><td><button class="btn btn-sm btn-danger" onclick='warehouse.deleteHistory("imports","${i.id}",${JSON.stringify(i)})'>Xóa</button></td></tr>`; 
-        }); 
-        document.getElementById("importHistory").innerHTML=html; 
-      }
-      updateStats(list){ 
-        document.getElementById("totalProducts").textContent=list.length; 
-        document.getElementById("totalValue").textContent=list.reduce((a,b)=>a+b.importPrice*b.stock,0)+"₫"; 
-        document.getElementById("lowStock").textContent=list.filter(p=>p.stock<5).length; 
-      }
-    }
-    const warehouse=new WarehouseManager();
+    onSnapshot(query(collection(db,'sales'), orderBy('date','desc')), snap=>{
+      this.sales = [];
+      snap.forEach(docSnap => { 
+        if(!docSnap.data().init) {
+          this.sales.push({id: docSnap.id, ...docSnap.data()});
+        }
+      });
+      this.renderHistory(this.sales,'salesHistory', 'sales');
+    });
 
-    saleQty.addEventListener("input",()=>{ saleTotal.textContent=(+saleQty.value||0)*saleProduct.sellPrice+"₫"; });
-  </script>
+    onSnapshot(query(collection(db,'imports'), orderBy('date','desc')), snap=>{
+      this.imports = [];
+      snap.forEach(docSnap => { 
+        if(!docSnap.data().init) {
+          this.imports.push({id: docSnap.id, ...docSnap.data()});
+        }
+      });
+      this.renderHistory(this.imports,'importHistory', 'imports');
+    });
+  }
+
+  async saveProduct(e){
+    e.preventDefault();
+    const name = document.getElementById('productName').value.trim();
+    const code = document.getElementById('productCode').value.trim();
+    const category = document.getElementById('productCategory').value;
+    const price = Number(document.getElementById('productPrice').value)||0;
+    const addStock = Number(document.getElementById('productNewStock').value)||0;
+    const importDate = document.getElementById('productImportDate').value || new Date().toISOString().split('T')[0];
+    const desc = document.getElementById('productDescription').value.trim();
+
+    if(this.editingId){
+      let p = this.products[this.editingId];
+      const newStock = (p.stock||0) + addStock;
+      await updateDoc(doc(db,'products',this.editingId), {
+        name, code, category, price, stock:newStock, description:desc, updatedAt: new Date().toISOString()
+      });
+      if(addStock>0){
+        await addDoc(collection(db,'imports'), { 
+          productId: this.editingId,
+          name, code, qty:addStock, price, total:addStock*price, date:importDate, note:"Nhập thêm", createdAt:new Date().toISOString() 
+        });
+      }
+      this.showAlert('✅ Cập nhật hàng thành công','success');
+    } else {
+      const docRef = await addDoc(collection(db,'products'), {
+        name, code, category, price, stock:addStock, sold:0, description:desc, createdAt:new Date().toISOString(), updatedAt:new Date().toISOString()
+      });
+      if(addStock>0){
+        await addDoc(collection(db,'imports'), { 
+          productId: docRef.id,
+          name, code, qty:addStock, price, total:addStock*price, date:importDate, note:"Nhập mới", createdAt:new Date().toISOString() 
+        });
+      }
+      this.showAlert('✅ Nhập hàng thành công','success');
+    }
+    this.clearForm(); this.cancelEdit();
+  }
+
+  editProduct(id){
+    const p = this.products[id];
+    this.editingId = id;
+    document.getElementById('productName').value = p.name;
+    document.getElementById('productCode').value = p.code;
+    document.getElementById('productCategory').value = p.category;
+    document.getElementById('productPrice').value = p.price;
+    document.getElementById('productNewStock').value = 0;
+    document.getElementById('productImportDate').value = '';
+    document.getElementById('productDescription').value = p.description || '';
+    document.getElementById('submitBtn').textContent = '✏️ Cập nhật hàng';
+    document.getElementById('submitBtn').className = 'btn btn-warning';
+    document.getElementById('cancelBtn').style.display = 'inline-block';
+    
+    // Chuyển sang tab sản phẩm
+    this.switchTab('products');
+  }
+
+  cancelEdit(){
+    this.editingId = null;
+    document.getElementById('submitBtn').textContent = '📦 Nhập hàng';
+    document.getElementById('submitBtn').className = 'btn btn-success';
+    document.getElementById('cancelBtn').style.display = 'none';
+    this.clearForm();
+  }
+
+  async deleteProduct(id){
+    if(!confirm('Bạn có chắc muốn xóa sản phẩm này? Tất cả lịch sử bán hàng và nhập hàng liên quan cũng sẽ bị xóa.')) return;
+    
+    // Xóa sản phẩm
+    await deleteDoc(doc(db,'products',id));
+    
+    // Xóa lịch sử bán hàng liên quan
+    const salesQuery = query(collection(db, 'sales'), where('productId', '==', id));
+    const salesSnap = await getDocs(salesQuery);
+    salesSnap.forEach(async (docSnap) => {
+      await deleteDoc(doc(db, 'sales', docSnap.id));
+    });
+    
+    // Xóa lịch sử nhập hàng liên quan
+    const importsQuery = query(collection(db, 'imports'), where('productId', '==', id));
+    const importsSnap = await getDocs(importsQuery);
+    importsSnap.forEach(async (docSnap) => {
+      await deleteDoc(doc(db, 'imports', docSnap.id));
+    });
+    
+    this.showAlert('✅ Xóa sản phẩm và lịch sử liên quan','success');
+  }
+
+  async deleteSale(id) {
+    if(!confirm('Bạn có chắc muốn xóa giao dịch này?')) return;
+    await deleteDoc(doc(db,'sales',id));
+    this.showAlert('✅ Xóa giao dịch thành công','success');
+  }
+
+  async deleteImport(id) {
+    if(!confirm('Bạn có chắc muốn xóa bản ghi nhập hàng này?')) return;
+    await deleteDoc(doc(db,'imports',id));
+    this.showAlert('✅ Xóa bản ghi nhập hàng thành công','success');
+  }
+
+  openSaleModal(id){
+    const p = this.products[id];
+    if((p.stock||0) <= 0){ this.showAlert('⚠ Sản phẩm đã hết hàng','error'); return; }
+    this.saleProductId = id;
+    document.getElementById('saleProductInfo').innerHTML = `
+      <h4>${p.name}</h4>
+      <div><strong>Mã:</strong> ${p.code} | <strong>Tồn:</strong> ${p.stock} | <strong>Giá:</strong> ${this.formatCurrency(p.price)}</div>
+    `;
+    document.getElementById('saleQuantity').max = p.stock;
+    document.getElementById('saleQuantity').value = 1;
+    document.getElementById('salePrice').value = p.price;
+    document.getElementById('saleDate').value = new Date().toISOString().split('T')[0];
+    document.getElementById('saleNote').value = '';
+    this.calculateSaleTotal();
+    document.getElementById('saleModal').style.display = 'block';
+  }
+
+  calculateSaleTotal(){
+    const qty = Number(document.getElementById('saleQuantity').value) || 0;
+    const price = Number(document.getElementById('salePrice').value) || 0;
+    const total = qty * price;
+    document.getElementById('saleTotal').textContent = this.formatCurrency(total);
+  }
+
+  closeSaleModal(){
+    document.getElementById('saleModal').style.display = 'none';
+    this.saleProductId = null;
+    document.getElementById('saleForm').reset();
+  }
+
+  async confirmSale(e){
+    e.preventDefault();
+    if(!this.saleProductId) return;
+    const p = this.products[this.saleProductId];
+    const qty = Number(document.getElementById('saleQuantity').value)||0;
+    const price = Number(document.getElementById('salePrice').value)||0;
+    const date = document.getElementById('saleDate').value;
+    const note = document.getElementById('saleNote').value.trim();
+
+    if(qty > (p.stock||0)){ this.showAlert('⚠ Số lượng bán vượt quá tồn kho','error'); return; }
+    if(qty <= 0){ this.showAlert('⚠ Số lượng bán phải lớn hơn 0','error'); return; }
+
+    const newStock = (p.stock||0) - qty;
+    const newSold = (p.sold||0) + qty;
+    
+    await updateDoc(doc(db,'products',this.saleProductId), {
+      stock: newStock, sold: newSold, updatedAt: new Date().toISOString()
+    });
+    
+    await addDoc(collection(db,'sales'), {
+      productId: this.saleProductId,
+      name: p.name, code: p.code, qty, price, total: qty*price, date, note,
+      createdAt: new Date().toISOString()
+    });
+
+    this.showAlert(`✅ Đã bán ${qty} ${p.name}`, 'success');
+    this.closeSaleModal();
+  }
+
+  renderOverview() {
+    const grid = document.getElementById('overviewGrid');
+    let arr = Object.values(this.products);
+    if(arr.length===0){ 
+      grid.innerHTML = '<div class="empty-state"><p>Không có sản phẩm</p></div>'; 
+      return; 
+    }
+    
+    // Sắp xếp theo tồn kho thấp trước
+    arr.sort((a,b) => (a.stock||0) - (b.stock||0));
+    
+    grid.innerHTML = arr.map(p=>{
+      const low = (p.stock||0)<=10;
+      return `<div class="product-card">
+        <h3>${p.name}</h3>
+        <div><strong>Mã:</strong> ${p.code}</div>
+        <div><strong>Danh mục:</strong> ${p.category}</div>
+        <div><strong>Giá:</strong> ${this.formatCurrency(p.price)}</div>
+        <div><strong>Tồn kho:</strong> ${p.stock} ${low?'<span class="low">🔴 Sắp hết</span>':''}</div>
+        <div><strong>Đã bán:</strong> ${p.sold||0}</div>
+        ${p.description?`<div><strong>Mô tả:</strong> ${p.description}</div>`:''}
+        <div class="product-actions">
+          <button class="btn btn-primary btn-small" onclick="warehouse.openSaleModal('${p.id}')">💰 Bán</button>
+          <button class="btn btn-warning btn-small" onclick="warehouse.editProduct('${p.id}')">✏️ Sửa</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  renderProducts(search=''){
+    const grid = document.getElementById('productGrid');
+    let arr = Object.values(this.products);
+    if(search){
+      search = search.toLowerCase();
+      arr = arr.filter(p=> 
+        p.name.toLowerCase().includes(search) || 
+        p.code.toLowerCase().includes(search) ||
+        p.category.toLowerCase().includes(search)
+      );
+    }
+    if(arr.length===0){ 
+      grid.innerHTML = '<div class="empty-state"><p>Không có sản phẩm</p></div>'; 
+      return; 
+    }
+    
+    grid.innerHTML = arr.map(p=>{
+      const low = (p.stock||0)<=10;
+      return `<div class="product-card">
+        <h3>${p.name}</h3>
+        <div><strong>Mã:</strong> ${p.code}</div>
+        <div><strong>Danh mục:</strong> ${p.category}</div>
+        <div><strong>Giá:</strong> ${this.formatCurrency(p.price)}</div>
+        <div><strong>Tồn kho:</strong> ${p.stock} ${low?'<span class="low">🔴 Sắp hết</span>':''}</div>
+        <div><strong>Đã bán:</strong> ${p.sold||0}</div>
+        ${p.description?`<div><strong>Mô tả:</strong> ${p.description}</div>`:''}
+        <div class="product-actions">
+          <button class="btn btn-primary" onclick="warehouse.openSaleModal('${p.id}')">💰 Bán hàng</button>
+          <button class="btn btn-warning" onclick="warehouse.editProduct('${p.id}')">✏️ Cập nhật</button>
+          <button class="btn btn-danger" onclick="warehouse.deleteProduct('${p.id}')">🗑️ Xóa</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  renderHistory(arr, elId, type){
+    const tbody = document.getElementById(elId);
+    if(arr.length===0){ 
+      tbody.innerHTML = `<tr><td colspan="8" class="empty-state">Chưa có dữ liệu</td></tr>`; 
+      return; 
+    }
+    
+    tbody.innerHTML = arr.map(s=>`
+      <tr>
+        <td>${s.date||''}</td>
+        <td>${s.name||''}</td>
+        <td>${s.code||''}</td>
+        <td>${s.qty||0}</td>
+        <td>${this.formatCurrency(s.price||0)}</td>
+        <td><strong>${this.formatCurrency(s.total||0)}</strong></td>
+        <td>${s.note||''}</td>
+        <td>
+          <button class="delete-btn" onclick="warehouse.${type==='sales'?'deleteSale':'deleteImport'}('${s.id}')">🗑️</button>
+        </td>
+      </tr>`).join('');
+  }
+
+  updateStats(){
+    let arr = Object.values(this.products);
+    document.getElementById('totalProducts').textContent = arr.length;
+    document.getElementById('totalValue').textContent = this.formatCurrency(arr.reduce((a,p)=>a+(p.price||0)*(p.stock||0),0));
+    document.getElementById('lowStock').textContent = arr.filter(p=>(p.stock||0)<=10).length;
+  }
+
+  clearForm(){ 
+    document.getElementById('productForm').reset(); 
+    document.getElementById('productImportDate').value = new Date().toISOString().split('T')[0];
+  }
+  
+  showAlert(msg,type){ 
+    const c=document.getElementById('alertContainer'); 
+    c.innerHTML=`<div class="alert ${type==='success'?'alert-success':'alert-error'}">${msg}</div>`; 
+    setTimeout(()=>c.innerHTML='',4000);
+  }
+}
+
+const warehouse = new WarehouseManager();
+window.warehouse = warehouse;
+
+// Đặt ngày mặc định khi tải trang
+document.getElementById('productImportDate').value = new Date().toISOString().split('T')[0];
+</script>
 </body>
 </html>
