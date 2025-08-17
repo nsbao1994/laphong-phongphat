@@ -457,19 +457,20 @@
     window.warehouse = warehouse;
 
     // Theo dõi auth
-    onAuthStateChanged(auth, (u) => {
-      if (u) {
-        currentUser = u;
-        role = u.email.includes("stock") ? "stock" : "seller";
-        $("loginScreen").style.display = "none";
-        $("appContainer").style.display = "block";
-        warehouse.listen();
-      } else {
-        currentUser = null;
-        $("appContainer").style.display = "none";
-        $("loginScreen").style.display = "flex";
-      }
-    });
+   onAuthStateChanged(auth, u => {
+  if (u) {
+    currentUser = u;
+    role = u.email.includes("stock") ? "stock" : "seller";
+    document.getElementById("loginScreen").style.display = "none";
+    document.getElementById("appContainer").style.display = "block";
+    warehouse.listen();
+  } else {
+    currentUser = null;
+    document.getElementById("appContainer").style.display = "none";
+    document.getElementById("loginScreen").style.display = "flex";
+  }
+});
+
   </script>
 </body>
 </html>
